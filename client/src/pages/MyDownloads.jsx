@@ -15,7 +15,6 @@ import {
 import { useAuth } from '../context/AuthContext';
 
 export default function MyDownloads() {
-  // Safe auth check
   let user = null;
   try {
     const auth = useAuth();
@@ -37,21 +36,23 @@ export default function MyDownloads() {
 
   const fetchPurchases = async () => {
     try {
-      // Sample purchases for demo
+      // Sample purchases with USD prices (converted from MWK)
+      // MWK 50,983 → $29.99
+      // MWK 33,983 → $19.99
       const samplePurchases = [
         {
           productId: '1',
           title: 'Packet Tracer Labs Bundle',
           category: 'Labs',
           purchaseDate: new Date().toISOString(),
-          amount: 50983
+          amount: 29.99
         },
         {
           productId: '2',
           title: 'Networking Documentation Suite',
           category: 'Documentation',
           purchaseDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-          amount: 33983
+          amount: 19.99
         }
       ];
       setPurchases(samplePurchases);
@@ -75,17 +76,15 @@ export default function MyDownloads() {
     }
   };
 
-  // Format currency in Malawi Kwacha
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-MW', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'MWK',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(amount);
   };
 
-  // If not logged in
   if (!user) {
     return (
       <div className="pt-20 min-h-screen bg-[#0A1628] flex items-center justify-center px-4">
@@ -109,7 +108,6 @@ export default function MyDownloads() {
     );
   }
 
-  // Loading state
   if (loading) {
     return (
       <div className="pt-20 min-h-screen bg-[#0A1628] flex items-center justify-center">
@@ -121,7 +119,6 @@ export default function MyDownloads() {
     );
   }
 
-  // Main content
   return (
     <div className="pt-20 min-h-screen bg-[#0A1628]">
       <div className="max-w-6xl mx-auto px-4 py-12">

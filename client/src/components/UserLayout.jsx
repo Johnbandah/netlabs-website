@@ -1,29 +1,53 @@
 import React, { useState } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { 
-  FaBox, 
+  FaUser, 
   FaEnvelope, 
-  FaChartBar, 
+  FaBox, 
+  FaDownload,
+  FaUserCog,
   FaSignOutAlt,
+  FaShoppingBag,
+  FaCreditCard,
+  FaHeadset,
   FaBars,
   FaTimes,
-  FaChartLine,
-  FaUsers
+  FaHome,
+  FaStore,
+  FaLock,
+  FaHeart
 } from 'react-icons/fa';
-import { useAuth } from '../../context/AuthContext';
+import NotificationDropdown from './NotificationDropdown';
 
-export default function AdminLayout() {
+export default function UserLayout() {
+  const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
+  if (!user) {
+    return (
+      <div className="pt-20 min-h-screen bg-[#0A1628] flex items-center justify-center">
+        <div className="bg-[#1A2D4A] p-8 rounded-2xl border border-[#2A3D5A] text-center">
+          <p className="text-[#B0C4DE] text-lg mb-4">🔒 Please login to view this page</p>
+          <Link to="/login" className="px-6 py-3 bg-gradient-to-r from-[#00D4FF] to-[#0066FF] text-white font-semibold rounded-lg hover:scale-105 transition-all inline-block">
+            Login Now
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   const menuItems = [
-    { path: '/admin', icon: <FaChartBar />, label: 'Dashboard' },
-    { path: '/admin/analytics', icon: <FaChartLine />, label: 'Analytics' },
-    { path: '/admin/products', icon: <FaBox />, label: 'Products' },
-    { path: '/admin/inquiries', icon: <FaEnvelope />, label: 'Inquiries' },
-    { path: '/admin/users', icon: <FaUsers />, label: 'Users' },
+    { path: '/dashboard', icon: <FaHome />, label: 'Dashboard' },
+    { path: '/store', icon: <FaStore />, label: 'Browse Store' },
+    { path: '/my-downloads', icon: <FaDownload />, label: 'My Downloads' },
+    { path: '/orders', icon: <FaCreditCard />, label: 'Purchase History' },
+    { path: '/profile', icon: <FaUserCog />, label: 'My Profile' },
+    { path: '/change-password', icon: <FaLock />, label: 'Change Password' },
+    { path: '/wishlist', icon: <FaHeart />, label: 'Wishlist' },
+    { path: '/contact', icon: <FaHeadset />, label: 'Support' },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -34,27 +58,30 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A1628]">
+    <div className="pt-16 min-h-screen bg-[#0A1628]">
       {/* Mobile Toggle */}
       <button
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 text-white text-2xl bg-[#1A2D4A] p-2 rounded-lg"
+        className="lg:hidden fixed top-20 left-4 z-50 text-white text-2xl bg-[#1A2D4A] p-2 rounded-lg"
       >
         {isSidebarOpen ? <FaTimes /> : <FaBars />}
       </button>
 
       {/* Sidebar */}
-      <div className={`fixed top-0 left-0 h-full w-64 bg-[#1A2D4A] border-r border-[#2A3D5A] transition-transform duration-300 z-40 ${
+      <div className={`fixed top-0 left-0 h-full w-64 bg-[#1A2D4A] border-r border-[#2A3D5A] transition-transform duration-300 z-40 pt-16 ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } lg:translate-x-0`}>
-        {/* Logo */}
-        <div className="p-6 border-b border-[#2A3D5A]">
-          <h2 className="text-2xl font-bold">
-            <span className="text-white">Net</span>
-            <span className="text-[#00D4FF]">Labs</span>
-            <span className="text-white">+</span>
-            <span className="text-xs text-[#B0C4DE] ml-2">Admin</span>
-          </h2>
+        {/* User Profile */}
+        <div className="p-4 border-b border-[#2A3D5A]">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-r from-[#00D4FF] to-[#0066FF] rounded-xl flex items-center justify-center text-xl text-white font-bold">
+              {user.name?.charAt(0) || 'U'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white font-semibold truncate">{user.name}</p>
+              <p className="text-[#B0C4DE] text-xs truncate">{user.email}</p>
+            </div>
+          </div>
         </div>
 
         {/* Menu */}
@@ -77,7 +104,6 @@ export default function AdminLayout() {
             </Link>
           ))}
 
-          {/* Logout Button */}
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all mt-4 border-t border-[#2A3D5A] pt-4"
@@ -87,10 +113,9 @@ export default function AdminLayout() {
           </button>
         </nav>
 
-        {/* Footer */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[#2A3D5A]">
           <p className="text-xs text-[#B0C4DE] text-center">
-            NetLabs+ Admin v1.0
+            NetLabs+ User v1.0
           </p>
         </div>
       </div>

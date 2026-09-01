@@ -4,16 +4,22 @@ const orderSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    default: null
+  },
+  userEmail: {
+    type: String,
+    default: ''
+  },
+  userName: {
+    type: String,
+    default: ''
   },
   products: [{
-    productId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Product'
-    },
+    productId: String,
     title: String,
     price: Number,
-    downloadUrl: String
+    quantity: Number,
+    category: String
   }],
   totalAmount: {
     type: Number,
@@ -21,15 +27,40 @@ const orderSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'paid', 'failed', 'refunded'],
+    enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'completed'],
     default: 'pending'
   },
-  stripePaymentId: String,
+  paymentMethod: {
+    type: String,
+    enum: ['stripe', 'paypal', 'bank_transfer', 'mobile_money'],
+    default: 'stripe'
+  },
+  paymentId: {
+    type: String,
+    default: ''
+  },
+  shippingAddress: {
+    address: String,
+    city: String,
+    country: String,
+    phone: String
+  },
+  notes: {
+    type: String,
+    default: ''
+  },
   createdAt: {
     type: Date,
     default: Date.now
   },
-  paidAt: Date
+  paidAt: {
+    type: Date,
+    default: null
+  },
+  deliveredAt: {
+    type: Date,
+    default: null
+  }
 });
 
 module.exports = mongoose.model('Order', orderSchema);

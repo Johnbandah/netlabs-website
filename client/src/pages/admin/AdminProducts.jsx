@@ -33,7 +33,7 @@ export default function AdminProducts() {
 
   const categories = ['All', 'Labs', 'Documentation', 'Tutorials', 'Guides'];
 
-  // Sample products data
+  // Sample products with USD prices
   const sampleProducts = [
     { _id: '1', title: 'Packet Tracer Labs Bundle', category: 'Labs', description: 'Complete collection of Packet Tracer labs for students', price: 29.99, features: ['Beginner to Advanced', 'Network Design', 'Configuration Labs'] },
     { _id: '2', title: 'Networking Documentation Suite', category: 'Documentation', description: 'Professional documentation templates', price: 19.99, features: ['Audit Templates', 'Compliance Guides'] },
@@ -50,7 +50,6 @@ export default function AdminProducts() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      // For demo, use sample data
       setTimeout(() => {
         setProducts(sampleProducts);
         setLoading(false);
@@ -113,11 +112,9 @@ export default function AdminProducts() {
     };
 
     if (editingProduct) {
-      // Edit existing product
       setProducts(products.map(p => p._id === editingProduct._id ? productData : p));
       showNotification(`"${productData.title}" updated successfully!`, 'success');
     } else {
-      // Add new product
       setProducts([...products, productData]);
       showNotification(`"${productData.title}" added successfully!`, 'success');
     }
@@ -141,6 +138,15 @@ export default function AdminProducts() {
       ...formData,
       features: formData.features.filter(f => f !== featureToRemove)
     });
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
   };
 
   const filteredProducts = products.filter(product => {
@@ -281,13 +287,13 @@ export default function AdminProducts() {
                 </div>
 
                 <div>
-                  <label className="text-white block mb-2 text-sm font-medium">Price (MWK) *</label>
+                  <label className="text-white block mb-2 text-sm font-medium">Price (USD) *</label>
                   <input
                     type="number"
                     value={formData.price}
                     onChange={(e) => setFormData({...formData, price: e.target.value})}
                     className="w-full p-3 rounded-lg bg-[#0A1628] text-white border border-[#2A3D5A] focus:border-[#00D4FF] outline-none transition-all"
-                    placeholder="Enter price in MWK"
+                    placeholder="Enter price in USD"
                     required
                     min="0"
                     step="0.01"
@@ -439,7 +445,7 @@ export default function AdminProducts() {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-[#B0C4DE] uppercase tracking-wider">Product</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-[#B0C4DE] uppercase tracking-wider">Category</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-[#B0C4DE] uppercase tracking-wider">Price</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-[#B0C4DE] uppercase tracking-wider">Price (USD)</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-[#B0C4DE] uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -493,7 +499,7 @@ export default function AdminProducts() {
                           animate={{ scale: 1 }}
                           transition={{ delay: index * 0.05 }}
                         >
-                          MWK {product.price.toLocaleString()}
+                          {formatCurrency(product.price)}
                         </motion.span>
                       </td>
                       <td className="px-6 py-4">

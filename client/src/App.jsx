@@ -3,8 +3,10 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import './index.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { NotificationProvider } from './context/NotificationContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import UserLayout from './components/UserLayout';
 import Hero from './components/Hero';
 import ImageCarousel from './components/ImageCarousel';
 import Services from './components/Services';
@@ -16,15 +18,23 @@ import About from './pages/About';
 import ServicesPage from './pages/Services';
 import Projects from './pages/Projects';
 import Store from './pages/Store';
+import Blog from './pages/Blog';
+import BlogDetail from './pages/BlogDetail';
 import Contact from './pages/Contact';
 import MyDownloads from './pages/MyDownloads';
 import UserDashboard from './pages/UserDashboard';
+import UserProfile from './pages/UserProfile';
+import ChangePassword from './pages/ChangePassword';
+import OrderHistory from './pages/OrderHistory';
+import Wishlist from './pages/Wishlist';
 import Checkout from './pages/Checkout';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminStats from './pages/admin/AdminStats';
 import AdminProducts from './pages/admin/AdminProducts';
 import AdminInquiries from './pages/admin/AdminInquiries';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminBlog from './pages/admin/AdminBlog';
 
 function HomePage() {
   return (
@@ -72,7 +82,7 @@ function AppContent() {
     <Router>
       <div className="min-h-screen">
         <Routes>
-          {/* Public Routes */}
+          {/* Public Routes - No Sidebar */}
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={
             <>
@@ -116,24 +126,17 @@ function AppContent() {
               <Footer />
             </>
           } />
-          <Route path="/my-downloads" element={
+          <Route path="/blog" element={
             <>
               <Navbar />
-              <MyDownloads />
+              <Blog />
               <Footer />
             </>
           } />
-          <Route path="/contact" element={
+          <Route path="/blog/:slug" element={
             <>
               <Navbar />
-              <Contact />
-              <Footer />
-            </>
-          } />
-          <Route path="/dashboard" element={
-            <>
-              <Navbar />
-              <UserDashboard />
+              <BlogDetail />
               <Footer />
             </>
           } />
@@ -145,16 +148,41 @@ function AppContent() {
             </>
           } />
 
+          {/* User Routes - With Sidebar (UserLayout) */}
+          <Route path="/dashboard" element={<UserLayout />}>
+            <Route index element={<UserDashboard />} />
+          </Route>
+          <Route path="/my-downloads" element={<UserLayout />}>
+            <Route index element={<MyDownloads />} />
+          </Route>
+          <Route path="/orders" element={<UserLayout />}>
+            <Route index element={<OrderHistory />} />
+          </Route>
+          <Route path="/profile" element={<UserLayout />}>
+            <Route index element={<UserProfile />} />
+          </Route>
+          <Route path="/change-password" element={<UserLayout />}>
+            <Route index element={<ChangePassword />} />
+          </Route>
+          <Route path="/wishlist" element={<UserLayout />}>
+            <Route index element={<Wishlist />} />
+          </Route>
+          <Route path="/contact" element={<UserLayout />}>
+            <Route index element={<Contact />} />
+          </Route>
+
           {/* Admin Routes - Protected */}
           <Route path="/admin" element={
             <AdminProtectedRoute>
-              <AdminLayout onLogout={() => {}} />
+              <AdminLayout />
             </AdminProtectedRoute>
           }>
             <Route index element={<AdminDashboard />} />
             <Route path="analytics" element={<AdminStats />} />
             <Route path="products" element={<AdminProducts />} />
             <Route path="inquiries" element={<AdminInquiries />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="blog" element={<AdminBlog />} />
           </Route>
 
           {/* 404 */}
@@ -181,7 +209,9 @@ function App() {
   return (
     <AuthProvider>
       <CartProvider>
-        <AppContent />
+        <NotificationProvider>
+          <AppContent />
+        </NotificationProvider>
       </CartProvider>
     </AuthProvider>
   );

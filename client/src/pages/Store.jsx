@@ -8,15 +8,14 @@ import {
   FaQuestionCircle, 
   FaShoppingCart, 
   FaDownload,
-  FaPlus,
-  FaMinus,
   FaUserPlus,
   FaLock,
-  FaCheck
+  FaCheck,
+  FaHeart,
+  FaRegHeart
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import API_URL from '../api/config';
 
 const iconMap = {
   'Labs': <FaBook />,
@@ -32,17 +31,18 @@ export default function Store() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [notification, setNotification] = useState(null);
+  const [wishlist, setWishlist] = useState([]);
 
   const categories = ['All', 'Labs', 'Documentation', 'Tutorials', 'Guides'];
 
-  // Sample products with MWK prices
+  // Sample products with USD prices
   const sampleProducts = [
-    { _id: '1', title: 'Packet Tracer Labs Bundle', category: 'Labs', description: 'Complete collection of Packet Tracer labs for students and professionals.', price: 50983, features: ['Beginner to Advanced', 'Network Design', 'Configuration Labs'] },
-    { _id: '2', title: 'Networking Documentation Suite', category: 'Documentation', description: 'Professional documentation templates and guides for network audits.', price: 33983, features: ['Audit Templates', 'Compliance Guides', 'Project Documentation'] },
-    { _id: '3', title: 'Network Security Tutorials', category: 'Tutorials', description: 'Video tutorials covering network security fundamentals and configuration.', price: 42483, features: ['Security Fundamentals', 'AAA Configuration', 'Firewall Rules'] },
-    { _id: '4', title: 'Troubleshooting Guides', category: 'Guides', description: 'Step-by-step guides for troubleshooting common network issues.', price: 25483, features: ['VLAN Troubleshooting', 'Routing Issues', 'Security Problems'] },
-    { _id: '5', title: 'Enterprise Network Design', category: 'Labs', description: 'Advanced labs for enterprise network design and implementation.', price: 59483, features: ['Enterprise Design', 'VLAN Segmentation', 'Routing'] },
-    { _id: '6', title: 'Network Security Documentation', category: 'Documentation', description: 'Comprehensive security documentation including policies and procedures.', price: 42483, features: ['Security Policies', 'Procedures', 'Audit Checklists'] },
+    { _id: 'prod_001', title: 'Packet Tracer Labs Bundle', category: 'Labs', description: 'Complete collection of Packet Tracer labs for students and professionals.', price: 29.99, features: ['Beginner to Advanced', 'Network Design', 'Configuration Labs'] },
+    { _id: 'prod_002', title: 'Networking Documentation Suite', category: 'Documentation', description: 'Professional documentation templates and guides for network audits.', price: 19.99, features: ['Audit Templates', 'Compliance Guides', 'Project Documentation'] },
+    { _id: 'prod_003', title: 'Network Security Tutorials', category: 'Tutorials', description: 'Video tutorials covering network security fundamentals and configuration.', price: 24.99, features: ['Security Fundamentals', 'AAA Configuration', 'Firewall Rules'] },
+    { _id: 'prod_004', title: 'Troubleshooting Guides', category: 'Guides', description: 'Step-by-step guides for troubleshooting common network issues.', price: 14.99, features: ['VLAN Troubleshooting', 'Routing Issues', 'Security Problems'] },
+    { _id: 'prod_005', title: 'Enterprise Network Design', category: 'Labs', description: 'Advanced labs for enterprise network design and implementation.', price: 34.99, features: ['Enterprise Design', 'VLAN Segmentation', 'Routing'] },
+    { _id: 'prod_006', title: 'Network Security Documentation', category: 'Documentation', description: 'Comprehensive security documentation including policies and procedures.', price: 24.99, features: ['Security Policies', 'Procedures', 'Audit Checklists'] },
   ];
 
   useEffect(() => {
@@ -58,19 +58,34 @@ export default function Store() {
     setTimeout(() => setNotification(null), 3000);
   };
 
+  const toggleWishlist = (productId) => {
+    if (wishlist.includes(productId)) {
+      setWishlist(wishlist.filter(id => id !== productId));
+      const product = products.find(p => p._id === productId);
+      setNotification(`"${product.title}" removed from wishlist`);
+    } else {
+      setWishlist([...wishlist, productId]);
+      const product = products.find(p => p._id === productId);
+      setNotification(`"${product.title}" added to wishlist! ❤️`);
+    }
+    setTimeout(() => setNotification(null), 3000);
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  };
+
   const filteredProducts = selectedCategory === 'All' 
     ? products 
     : products.filter(p => p.category === selectedCategory);
 
-  // Format currency
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-MW', {
-      style: 'currency',
-      currency: 'MWK',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  const cartTotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const itemCount = getItemCount();
 
   return (
     <div className="pt-20 min-h-screen bg-[#0A1628]">
@@ -109,18 +124,18 @@ export default function Store() {
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-[#1A2D4A] p-4 rounded-xl border border-[#00D4FF] mb-8 flex items-center justify-between"
+            className="bg-[#1A2D4A] p-4 rounded-xl border border-[#00D4FF] mb-8 flex items-center justify-between flex-wrap gap-3"
           >
             <div className="flex items-center gap-3">
               <FaShoppingCart className="text-[#00D4FF] text-2xl" />
-              <span className="text-white">{getItemCount()} item(s) in cart</span>
-              <span className="text-[#00D4FF] font-bold">{formatCurrency(cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0))}</span>
+              <span className="text-white">{itemCount} item(s) in cart</span>
+              <span className="text-[#00D4FF] font-bold">{formatCurrency(cartTotal)}</span>
             </div>
             <Link
               to="/checkout"
               className="px-4 py-2 bg-gradient-to-r from-[#00D4FF] to-[#0066FF] text-white font-semibold rounded-lg hover:scale-105 transition-all"
             >
-              Checkout
+              Checkout →
             </Link>
           </motion.div>
         )}
@@ -156,8 +171,20 @@ export default function Store() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 whileHover={{ y: -8 }}
-                className="bg-[#1A2D4A] p-6 rounded-xl border border-[#2A3D5A] hover:border-[#00D4FF] transition-all duration-300 flex flex-col"
+                className="bg-[#1A2D4A] p-6 rounded-xl border border-[#2A3D5A] hover:border-[#00D4FF] transition-all duration-300 flex flex-col relative"
               >
+                {/* Wishlist Button */}
+                <button
+                  onClick={() => toggleWishlist(product._id)}
+                  className="absolute top-3 right-3 text-2xl hover:scale-110 transition-all"
+                >
+                  {wishlist.includes(product._id) ? (
+                    <FaHeart className="text-red-500" />
+                  ) : (
+                    <FaRegHeart className="text-[#B0C4DE] hover:text-red-400" />
+                  )}
+                </button>
+
                 <div className="text-4xl text-[#00D4FF] mb-4">
                   {iconMap[product.category] || <FaBook />}
                 </div>

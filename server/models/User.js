@@ -18,6 +18,24 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  role: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user'
+  },
+  status: {
+    type: String,
+    enum: ['active', 'inactive', 'suspended'],
+    default: 'active'
+  },
+  phone: {
+    type: String,
+    default: ''
+  },
+  address: {
+    type: String,
+    default: ''
+  },
   purchases: [{
     productId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -33,14 +51,13 @@ const userSchema = new mongoose.Schema({
       default: 0
     }
   }],
-  role: {
-    type: String,
-    enum: ['user', 'admin'],
-    default: 'user'
-  },
   createdAt: {
     type: Date,
     default: Date.now
+  },
+  lastLogin: {
+    type: Date,
+    default: null
   }
 });
 

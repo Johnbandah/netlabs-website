@@ -47,12 +47,11 @@ export default function AdminStats() {
   const [timeRange, setTimeRange] = useState('week');
 
   // Sample data with Malawi Kwacha (MWK)
-  // Exchange rate: 1 USD ≈ 1700 MWK (approximate)
   const analyticsData = {
     totalUsers: 45,
     totalProducts: 6,
     totalInquiries: 12,
-    totalRevenue: 2120750, // $1247.50 * 1700 = 2,120,750 MWK
+    totalRevenue: 2120750,
     userGrowth: 12,
     productGrowth: 8,
     inquiryGrowth: 15,
@@ -74,7 +73,7 @@ export default function AdminStats() {
       labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
       datasets: [{
         label: 'Revenue (MWK)',
-        data: [76500, 151300, 113900, 209100, 265200, 132600, 57800], // USD values * 1700
+        data: [76500, 151300, 113900, 209100, 265200, 132600, 57800],
         borderColor: '#00D4FF',
         backgroundColor: 'rgba(0, 212, 255, 0.1)',
         fill: true,
@@ -159,7 +158,7 @@ export default function AdminStats() {
       y: {
         beginAtZero: true,
         grid: { color: 'rgba(255, 255, 255, 0.05)' },
-        ticks: { 
+        ticks: {
           color: '#B0C4DE',
           callback: function(value) {
             if (value >= 1000000) {
@@ -183,37 +182,37 @@ export default function AdminStats() {
   }, []);
 
   const statCards = [
-    { 
-      title: 'Total Users', 
-      value: analyticsData.totalUsers, 
-      icon: <FaUsers className="text-3xl" />, 
-      color: 'from-blue-500 to-cyan-500', 
-      change: `+${analyticsData.userGrowth}%`, 
-      up: true 
+    {
+      title: 'Total Users',
+      value: analyticsData.totalUsers,
+      icon: <FaUsers className="text-3xl" />,
+      color: 'from-blue-500 to-cyan-500',
+      change: `+${analyticsData.userGrowth}%`,
+      up: true
     },
-    { 
-      title: 'Total Products', 
-      value: analyticsData.totalProducts, 
-      icon: <FaBox className="text-3xl" />, 
-      color: 'from-purple-500 to-pink-500', 
-      change: `+${analyticsData.productGrowth}%`, 
-      up: true 
+    {
+      title: 'Total Products',
+      value: analyticsData.totalProducts,
+      icon: <FaBox className="text-3xl" />,
+      color: 'from-purple-500 to-pink-500',
+      change: `+${analyticsData.productGrowth}%`,
+      up: true
     },
-    { 
-      title: 'Total Inquiries', 
-      value: analyticsData.totalInquiries, 
-      icon: <FaEnvelope className="text-3xl" />, 
-      color: 'from-yellow-500 to-orange-500', 
-      change: `+${analyticsData.inquiryGrowth}%`, 
-      up: true 
+    {
+      title: 'Total Inquiries',
+      value: analyticsData.totalInquiries,
+      icon: <FaEnvelope className="text-3xl" />,
+      color: 'from-yellow-500 to-orange-500',
+      change: `+${analyticsData.inquiryGrowth}%`,
+      up: true
     },
-    { 
-      title: 'Total Revenue', 
-      value: formatCurrency(analyticsData.totalRevenue), 
-      icon: <FaMoneyBillWave className="text-3xl" />, 
-      color: 'from-green-500 to-emerald-500', 
-      change: `+${analyticsData.revenueGrowth}%`, 
-      up: true 
+    {
+      title: 'Total Revenue',
+      value: formatCurrency(analyticsData.totalRevenue),
+      icon: <FaMoneyBillWave className="text-3xl" />,
+      color: 'from-green-500 to-emerald-500',
+      change: `+${analyticsData.revenueGrowth}%`,
+      up: true
     },
   ];
 
@@ -273,7 +272,7 @@ export default function AdminStats() {
                   {stat.up ? <FaArrowUp /> : <FaArrowDown />} {stat.change}
                 </div>
               </div>
-              <div className={`bg-gradient-to-br ${stat.color} p-3 rounded-xl text-white shadow-lg`}>
+              <div className={`bg-gradient-to-br ${stat.color} p-3 rounded-xl text-white shadow-lg shrink-0`}>
                 {stat.icon}
               </div>
             </div>

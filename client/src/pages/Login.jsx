@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  FaUser, 
   FaEnvelope, 
   FaLock, 
   FaEye, 
@@ -52,6 +51,43 @@ export default function Login() {
       setError(result.message || 'Invalid credentials. Please try again.');
     }
     setLoading(false);
+  };
+
+  // Social login handlers - Get real name from prompt
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError('');
+    
+    const name = prompt('Enter your full name:') || 'Google User';
+    
+    const demoUser = {
+      id: 'google_user_' + Date.now(),
+      name: name,
+      email: 'google@netlabs.com',
+      role: 'user',
+      createdAt: new Date().toISOString()
+    };
+    
+    localStorage.setItem('netlabs_user', JSON.stringify(demoUser));
+    window.location.href = '/dashboard';
+  };
+
+  const handleGithubLogin = async () => {
+    setLoading(true);
+    setError('');
+    
+    const name = prompt('Enter your full name:') || 'GitHub User';
+    
+    const demoUser = {
+      id: 'github_user_' + Date.now(),
+      name: name,
+      email: 'github@netlabs.com',
+      role: 'user',
+      createdAt: new Date().toISOString()
+    };
+    
+    localStorage.setItem('netlabs_user', JSON.stringify(demoUser));
+    window.location.href = '/dashboard';
   };
 
   return (
@@ -175,11 +211,19 @@ export default function Login() {
 
         {/* Social Login */}
         <div className="grid grid-cols-2 gap-4">
-          <button className="flex items-center justify-center gap-2 p-3 bg-[#E8F4FD] rounded-lg border border-[#B8D8F0] hover:border-[#00B4D8] transition-all">
+          <button
+            onClick={handleGoogleLogin}
+            disabled={loading}
+            className="flex items-center justify-center gap-2 p-3 bg-[#E8F4FD] rounded-lg border border-[#B8D8F0] hover:border-[#00B4D8] hover:bg-[#F0F8FF] transition-all disabled:opacity-50"
+          >
             <FaGoogle className="text-red-500 text-xl" />
             <span className="text-[#1A3A5C] text-sm font-medium">Google</span>
           </button>
-          <button className="flex items-center justify-center gap-2 p-3 bg-[#E8F4FD] rounded-lg border border-[#B8D8F0] hover:border-[#00B4D8] transition-all">
+          <button
+            onClick={handleGithubLogin}
+            disabled={loading}
+            className="flex items-center justify-center gap-2 p-3 bg-[#E8F4FD] rounded-lg border border-[#B8D8F0] hover:border-[#00B4D8] hover:bg-[#F0F8FF] transition-all disabled:opacity-50"
+          >
             <FaGithub className="text-[#1A3A5C] text-xl" />
             <span className="text-[#1A3A5C] text-sm font-medium">GitHub</span>
           </button>
