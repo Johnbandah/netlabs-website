@@ -142,6 +142,12 @@ export default function AdminDashboard() {
               <FaEnvelope className="inline mr-2" /> View Inquiries
             </Link>
             <Link
+              to="/admin/quote-requests"
+              className="block w-full text-left px-4 py-2 bg-[#0A1628] rounded-lg text-[#B0C4DE] hover:text-white hover:border-[#00D4FF] border border-transparent transition-all"
+            >
+              <FaShoppingCart className="inline mr-2" /> View Quote Requests
+            </Link>
+            <Link
               to="/store"
               className="block w-full text-left px-4 py-2 bg-[#0A1628] rounded-lg text-[#B0C4DE] hover:text-white hover:border-[#00D4FF] border border-transparent transition-all"
             >

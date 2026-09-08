@@ -1,4 +1,5 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import API_URL from '../api/config';
 
 const NotificationContext = createContext(null);
 
@@ -11,41 +12,103 @@ export const useNotification = () => {
 };
 
 export const NotificationProvider = ({ children }) => {
-  const [notifications, setNotifications] = useState([
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Sample notifications for demo
+  const sampleNotifications = [
     {
       id: 1,
       title: 'Welcome to NetLabs+!',
       message: 'Thank you for joining our community. Start exploring our networking resources.',
       type: 'success',
       read: false,
-      createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString() // 5 minutes ago
+      createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString()
     },
     {
       id: 2,
-      title: 'New Product Available',
-      message: 'Check out our latest Packet Tracer Labs Bundle!',
-      type: 'info',
+      title: 'New Quote Request',
+      message: 'John Doe has submitted a new quote request for Network Design.',
+      type: 'quote',
       read: false,
-      createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString() // 30 minutes ago
+      quoteId: '1',
+      createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString()
     },
     {
       id: 3,
-      title: 'Download Ready',
-      message: 'Your purchased resources are now available for download.',
-      type: 'success',
+      title: 'New Inquiry Received',
+      message: 'Mercy Banda has sent a new inquiry about network security.',
+      type: 'inquiry',
       read: true,
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() // 2 hours ago
+      inquiryId: '3',
+      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString()
     }
-  ]);
+  ];
 
-  const [unreadCount, setUnreadCount] = useState(2);
+  // Check for new quote requests
+  useEffect(() => {
+    // Load saved notifications from localStorage
+    const savedNotifications = localStorage.getItem('netlabs_notifications');
+    if (savedNotifications) {
+      try {
+        const parsed = JSON.parse(savedNotifications);
+        setNotifications(parsed);
+        setUnreadCount(parsed.filter(n => !n.read).length);
+      } catch (e) {
+        setNotifications(sampleNotifications);
+        setUnreadCount(sampleNotifications.filter(n => !n.read).length);
+      }
+    } else {
+      setNotifications(sampleNotifications);
+      setUnreadCount(sampleNotifications.filter(n => !n.read).length);
+    }
 
-  const addNotification = (title, message, type = 'info') => {
+    // Check for new quote requests every 30 seconds
+    const interval = setInterval(checkQuoteRequests, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Save notifications to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('netlabs_notifications', JSON.stringify(notifications));
+  }, [notifications]);
+
+  const checkQuoteRequests = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/quote-requests`);
+      const data = await response.json();
+      if (data.success) {
+        const pending = data.data.filter(r => r.status === 'pending');
+        const newCount = pending.length;
+        
+        // Add notifications for new pending requests
+        pending.forEach(request => {
+          // Check if notification already exists for this quote
+          const exists = notifications.some(n => n.quoteId === request._id);
+          if (!exists) {
+            addNotification(
+              `New Quote Request from ${request.name}`,
+              `${request.message.substring(0, 100)}...`,
+              'quote',
+              request._id
+            );
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error checking quote requests:', error);
+    }
+  };
+
+  const addNotification = (title, message, type = 'info', quoteId = null, inquiryId = null, orderId = null) => {
     const newNotification = {
-      id: Date.now(),
+      id: Date.now() + Math.random(),
       title,
       message,
       type,
+      quoteId,
+      inquiryId,
+      orderId,
       read: false,
       createdAt: new Date().toISOString()
     };
@@ -84,7 +147,8 @@ export const NotificationProvider = ({ children }) => {
     if (minutes < 1) return 'Just now';
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
-    return `${days}d ago`;
+    if (days < 7) return `${days}d ago`;
+    return new Date(date).toLocaleDateString();
   };
 
   const value = {

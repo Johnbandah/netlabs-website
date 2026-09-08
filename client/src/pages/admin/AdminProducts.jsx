@@ -12,7 +12,6 @@ import {
   FaSave,
   FaTimesCircle
 } from 'react-icons/fa';
-import API_URL from '../../api/config';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState([]);

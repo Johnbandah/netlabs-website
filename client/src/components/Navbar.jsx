@@ -111,8 +111,9 @@ export default function Navbar() {
               </div>
             )}
 
+            {/* ✅ FIXED: Get a Quote button links to /quote-request */}
             <Link
-              to="/contact"
+              to="/quote-request"
               className="px-5 py-2 bg-gradient-to-r from-[#00D4FF] to-[#0066FF] text-white font-semibold rounded-lg hover:scale-105 transition-all duration-300 shadow-lg shadow-[#00D4FF]/20 hover:shadow-[#00D4FF]/40 text-sm whitespace-nowrap"
             >
               Get a Quote
@@ -219,8 +220,9 @@ export default function Navbar() {
               </>
             )}
 
+            {/* ✅ FIXED: Mobile Get a Quote button */}
             <Link
-              to="/contact"
+              to="/quote-request"
               className="block mt-3 mx-3 px-4 py-2.5 text-center bg-gradient-to-r from-[#00D4FF] to-[#0066FF] rounded-lg text-white font-semibold hover:scale-105 transition-transform duration-300"
               onClick={() => setIsOpen(false)}
             >

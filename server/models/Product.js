@@ -22,7 +22,7 @@ const productSchema = new mongoose.Schema({
   features: [String],
   downloadUrl: {
     type: String,
-    default: '' // This would be the file URL after upload
+    default: ''
   },
   fileName: {
     type: String,
@@ -31,6 +31,10 @@ const productSchema = new mongoose.Schema({
   fileSize: {
     type: String,
     default: ''
+  },
+  fileType: {
+    type: String,
+    default: 'zip'
   },
   createdAt: {
     type: Date,

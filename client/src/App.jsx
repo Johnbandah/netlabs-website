@@ -21,6 +21,7 @@ import Store from './pages/Store';
 import Blog from './pages/Blog';
 import BlogDetail from './pages/BlogDetail';
 import Contact from './pages/Contact';
+import QuoteRequest from './pages/QuoteRequest';
 import MyDownloads from './pages/MyDownloads';
 import UserDashboard from './pages/UserDashboard';
 import UserProfile from './pages/UserProfile';
@@ -30,11 +31,13 @@ import Wishlist from './pages/Wishlist';
 import Checkout from './pages/Checkout';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminStats from './pages/admin/AdminStats';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminProducts from './pages/admin/AdminProducts';
 import AdminInquiries from './pages/admin/AdminInquiries';
+import AdminQuoteRequests from './pages/admin/AdminQuoteRequests';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminBlog from './pages/admin/AdminBlog';
+import AdminOrders from './pages/admin/AdminOrders';
 
 function HomePage() {
   return (
@@ -147,6 +150,13 @@ function AppContent() {
               <Footer />
             </>
           } />
+          <Route path="/quote-request" element={
+            <>
+              <Navbar />
+              <QuoteRequest />
+              <Footer />
+            </>
+          } />
 
           {/* User Routes - With Sidebar (UserLayout) */}
           <Route path="/dashboard" element={<UserLayout />}>
@@ -178,9 +188,11 @@ function AppContent() {
             </AdminProtectedRoute>
           }>
             <Route index element={<AdminDashboard />} />
-            <Route path="analytics" element={<AdminStats />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="analytics" element={<AdminAnalytics />} />
             <Route path="products" element={<AdminProducts />} />
             <Route path="inquiries" element={<AdminInquiries />} />
+            <Route path="quote-requests" element={<AdminQuoteRequests />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="blog" element={<AdminBlog />} />
           </Route>

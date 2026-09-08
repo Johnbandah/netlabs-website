@@ -10,25 +10,28 @@ import {
   FaCheckCircle,
   FaClock,
   FaLock,
-  FaSpinner
+  FaSpinner,
+  FaFileArchive,
+  FaFile
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
+import API_URL from '../api/config';
 
 export default function MyDownloads() {
-  let user = null;
-  try {
-    const auth = useAuth();
-    user = auth?.user || null;
-  } catch (error) {
-    console.warn('Auth not available in MyDownloads');
-  }
-
+  const { user } = useAuth();
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(null);
+  const [stats, setStats] = useState({
+    totalDownloads: 0,
+    totalPurchases: 0,
+    totalOrders: 0
+  });
 
   useEffect(() => {
     if (user) {
       fetchPurchases();
+      fetchStats();
     } else {
       setLoading(false);
     }
@@ -36,35 +39,117 @@ export default function MyDownloads() {
 
   const fetchPurchases = async () => {
     try {
-      // Sample purchases with USD prices (converted from MWK)
-      // MWK 50,983 → $29.99
-      // MWK 33,983 → $19.99
-      const samplePurchases = [
+      const response = await fetch(`${API_URL}/api/downloads/user/${user.id}`);
+      const data = await response.json();
+      if (data.success) {
+        if (data.data.length === 0) {
+          // Sample purchases for demo if no real data
+          setPurchases([
+            {
+              productId: '1',
+              title: 'Packet Tracer Labs Bundle',
+              category: 'Labs',
+              purchaseDate: new Date().toISOString(),
+              amount: 29.99,
+              downloadUrl: '/api/downloads/file/1',
+              fileName: 'Packet-Tracer-Labs.zip'
+            },
+            {
+              productId: '2',
+              title: 'Networking Documentation Suite',
+              category: 'Documentation',
+              purchaseDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+              amount: 19.99,
+              downloadUrl: '/api/downloads/file/2',
+              fileName: 'Networking-Documentation.zip'
+            }
+          ]);
+        } else {
+          setPurchases(data.data);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching purchases:', error);
+      // Sample purchases for demo
+      setPurchases([
         {
           productId: '1',
           title: 'Packet Tracer Labs Bundle',
           category: 'Labs',
           purchaseDate: new Date().toISOString(),
-          amount: 29.99
+          amount: 29.99,
+          downloadUrl: '/api/downloads/file/1',
+          fileName: 'Packet-Tracer-Labs.zip'
         },
         {
           productId: '2',
           title: 'Networking Documentation Suite',
           category: 'Documentation',
           purchaseDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-          amount: 19.99
+          amount: 19.99,
+          downloadUrl: '/api/downloads/file/2',
+          fileName: 'Networking-Documentation.zip'
         }
-      ];
-      setPurchases(samplePurchases);
-    } catch (error) {
-      console.error('Error fetching purchases:', error);
+      ]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDownload = (productId, title) => {
-    alert(`📥 Downloading: ${title}\n\nIn production, this would download the actual file from the server.`);
+  const fetchStats = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/downloads/stats/${user.id}`);
+      const data = await response.json();
+      if (data.success) {
+        setStats(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  const handleDownload = async (productId, title) => {
+    setDownloading(productId);
+    try {
+      const url = `${API_URL}/api/downloads/file/${productId}?userId=${user.id}`;
+      console.log('📥 Downloading from:', url);
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Download failed');
+      }
+      
+      // Get filename from headers
+      const contentDisposition = response.headers.get('content-disposition');
+      let fileName = `${title}.txt`;
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename="(.+)"/);
+        if (match) fileName = match[1];
+      }
+      
+      // Get the file content as text
+      const text = await response.text();
+      
+      // Create blob and download
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url_obj = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url_obj;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url_obj);
+      
+      alert(`✅ "${title}" downloaded successfully!`);
+    } catch (error) {
+      console.error('Download error:', error);
+      alert(`❌ Download failed: ${error.message}`);
+    } finally {
+      setDownloading(null);
+    }
   };
 
   const getIcon = (category) => {
@@ -72,7 +157,7 @@ export default function MyDownloads() {
       case 'Labs': return <FaBook className="text-[#00D4FF]" />;
       case 'Documentation': return <FaFileAlt className="text-[#0066FF]" />;
       case 'Tutorials': return <FaVideo className="text-[#4A9BC7]" />;
-      default: return <FaFilePdf className="text-[#B0C4DE]" />;
+      default: return <FaFile className="text-[#B0C4DE]" />;
     }
   };
 
@@ -122,6 +207,7 @@ export default function MyDownloads() {
   return (
     <div className="pt-20 min-h-screen bg-[#0A1628]">
       <div className="max-w-6xl mx-auto px-4 py-12">
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -133,6 +219,22 @@ export default function MyDownloads() {
           </h1>
           <p className="text-[#B0C4DE]">Access all your purchased resources</p>
         </motion.div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          <div className="bg-[#1A2D4A] p-4 rounded-xl border border-[#2A3D5A] text-center">
+            <p className="text-2xl font-bold text-[#00D4FF]">{purchases.length}</p>
+            <p className="text-xs text-[#B0C4DE]">Purchases</p>
+          </div>
+          <div className="bg-[#1A2D4A] p-4 rounded-xl border border-[#2A3D5A] text-center">
+            <p className="text-2xl font-bold text-green-400">{stats.totalDownloads}</p>
+            <p className="text-xs text-[#B0C4DE]">Downloads</p>
+          </div>
+          <div className="bg-[#1A2D4A] p-4 rounded-xl border border-[#2A3D5A] text-center">
+            <p className="text-2xl font-bold text-[#00D4FF]">{stats.totalOrders}</p>
+            <p className="text-xs text-[#B0C4DE]">Orders</p>
+          </div>
+        </div>
 
         {purchases.length === 0 ? (
           <motion.div
@@ -182,10 +284,24 @@ export default function MyDownloads() {
                     </div>
                     <button
                       onClick={() => handleDownload(purchase.productId, purchase.title)}
-                      className="mt-3 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#00D4FF] to-[#0066FF] text-white text-sm font-semibold rounded-lg hover:scale-105 transition-all"
+                      disabled={downloading === purchase.productId}
+                      className={`mt-3 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#00D4FF] to-[#0066FF] text-white text-sm font-semibold rounded-lg transition-all ${
+                        downloading === purchase.productId 
+                          ? 'opacity-50 cursor-not-allowed' 
+                          : 'hover:scale-105'
+                      }`}
                     >
-                      <FaDownload />
-                      Download Now
+                      {downloading === purchase.productId ? (
+                        <>
+                          <FaSpinner className="animate-spin" />
+                          Downloading...
+                        </>
+                      ) : (
+                        <>
+                          <FaDownload />
+                          Download Now
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>

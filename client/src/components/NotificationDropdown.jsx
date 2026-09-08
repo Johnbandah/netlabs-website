@@ -1,7 +1,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaBell, FaTimes, FaCheck, FaCircle, FaInfoCircle, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
+import { 
+  FaBell, 
+  FaTimes, 
+  FaCheck, 
+  FaCircle, 
+  FaInfoCircle, 
+  FaCheckCircle, 
+  FaExclamationTriangle,
+  FaDollarSign,
+  FaEnvelope,
+  FaUser,
+  FaBox
+} from 'react-icons/fa';
 import { useNotification } from '../context/NotificationContext';
+import { Link } from 'react-router-dom';
 
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -23,6 +36,9 @@ export default function NotificationDropdown() {
       case 'success': return <FaCheckCircle className="text-green-400" />;
       case 'info': return <FaInfoCircle className="text-blue-400" />;
       case 'warning': return <FaExclamationTriangle className="text-yellow-400" />;
+      case 'quote': return <FaDollarSign className="text-[#00D4FF]" />;
+      case 'inquiry': return <FaEnvelope className="text-purple-400" />;
+      case 'order': return <FaBox className="text-orange-400" />;
       default: return <FaCircle className="text-[#B0C4DE]" />;
     }
   };
@@ -32,8 +48,18 @@ export default function NotificationDropdown() {
       case 'success': return 'border-green-500/30 bg-green-500/10';
       case 'info': return 'border-blue-500/30 bg-blue-500/10';
       case 'warning': return 'border-yellow-500/30 bg-yellow-500/10';
+      case 'quote': return 'border-[#00D4FF]/30 bg-[#00D4FF]/10';
+      case 'inquiry': return 'border-purple-500/30 bg-purple-500/10';
+      case 'order': return 'border-orange-500/30 bg-orange-500/10';
       default: return 'border-[#2A3D5A] bg-[#1A2D4A]';
     }
+  };
+
+  const getNotificationLink = (notif) => {
+    if (notif.quoteId) return '/admin/quote-requests';
+    if (notif.inquiryId) return '/admin/inquiries';
+    if (notif.orderId) return '/admin/orders';
+    return '#';
   };
 
   return (
@@ -45,8 +71,8 @@ export default function NotificationDropdown() {
       >
         <FaBell className="text-xl" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse">
-            {unreadCount}
+          <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center px-1.5 animate-pulse">
+            {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
       </button>
@@ -94,10 +120,16 @@ export default function NotificationDropdown() {
                 </div>
               ) : (
                 notifications.map((notif) => (
-                  <div
+                  <Link
                     key={notif.id}
-                    className={`p-4 border-b border-[#2A3D5A] hover:bg-[#2A3D5A]/30 transition-all cursor-pointer ${!notif.read ? 'bg-[#00D4FF]/5' : ''}`}
-                    onClick={() => markAsRead(notif.id)}
+                    to={getNotificationLink(notif)}
+                    onClick={() => {
+                      markAsRead(notif.id);
+                      setIsOpen(false);
+                    }}
+                    className={`block p-4 border-b border-[#2A3D5A] hover:bg-[#2A3D5A]/30 transition-all cursor-pointer ${
+                      !notif.read ? 'bg-[#00D4FF]/5' : ''
+                    }`}
                   >
                     <div className="flex items-start gap-3">
                       <div className="mt-1">{getTypeIcon(notif.type)}</div>
@@ -112,12 +144,40 @@ export default function NotificationDropdown() {
                         </div>
                         <p className="text-sm text-[#B0C4DE] line-clamp-2">{notif.message}</p>
                         <p className="text-xs text-[#B0C4DE]/50 mt-1">{getTimeAgo(notif.createdAt)}</p>
+                        {notif.quoteId && (
+                          <span className="text-xs text-[#00D4FF] mt-1 inline-block">
+                            View Quote Request →
+                          </span>
+                        )}
+                        {notif.inquiryId && (
+                          <span className="text-xs text-purple-400 mt-1 inline-block">
+                            View Inquiry →
+                          </span>
+                        )}
+                        {notif.orderId && (
+                          <span className="text-xs text-orange-400 mt-1 inline-block">
+                            View Order →
+                          </span>
+                        )}
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 ))
               )}
             </div>
+
+            {/* Footer */}
+            {notifications.length > 0 && (
+              <div className="p-2 border-t border-[#2A3D5A] text-center">
+                <Link
+                  to="/admin/notifications"
+                  className="text-xs text-[#B0C4DE] hover:text-[#00D4FF] transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  View all notifications
+                </Link>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

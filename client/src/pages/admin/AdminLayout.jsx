@@ -8,9 +8,13 @@ import {
   FaBars,
   FaTimes,
   FaChartLine,
-  FaUsers
+  FaUsers,
+  FaDollarSign,
+  FaEdit,
+  FaShoppingBag
 } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
+import NotificationDropdown from '../../components/NotificationDropdown';
 
 export default function AdminLayout() {
   const location = useLocation();
@@ -21,9 +25,12 @@ export default function AdminLayout() {
   const menuItems = [
     { path: '/admin', icon: <FaChartBar />, label: 'Dashboard' },
     { path: '/admin/analytics', icon: <FaChartLine />, label: 'Analytics' },
+    { path: '/admin/orders', icon: <FaShoppingBag />, label: 'Orders' },
     { path: '/admin/products', icon: <FaBox />, label: 'Products' },
     { path: '/admin/inquiries', icon: <FaEnvelope />, label: 'Inquiries' },
+    { path: '/admin/quote-requests', icon: <FaDollarSign />, label: 'Quote Requests' },
     { path: '/admin/users', icon: <FaUsers />, label: 'Users' },
+    { path: '/admin/blog', icon: <FaEdit />, label: 'Blog' },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -98,6 +105,12 @@ export default function AdminLayout() {
       {/* Main Content */}
       <div className={`transition-all duration-300 ${isSidebarOpen ? 'lg:ml-64' : 'ml-0'}`}>
         <div className="p-6">
+          {/* Top Bar with Notification Bell */}
+          <div className="flex justify-end items-center mb-6">
+            <NotificationDropdown />
+          </div>
+
+          {/* Page Content */}
           <Outlet />
         </div>
       </div>

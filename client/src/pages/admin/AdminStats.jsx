@@ -46,25 +46,25 @@ export default function AdminStats() {
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('week');
 
-  // Sample data with Malawi Kwacha (MWK)
+  // Analytics data in USD
   const analyticsData = {
     totalUsers: 45,
     totalProducts: 6,
     totalInquiries: 12,
-    totalRevenue: 2120750,
+    totalRevenue: 1247.50,
     userGrowth: 12,
     productGrowth: 8,
     inquiryGrowth: 15,
     revenueGrowth: 22
   };
 
-  // Format currency in Malawi Kwacha
+  // Format currency in USD
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-MW', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'MWK',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(amount);
   };
 
@@ -72,8 +72,8 @@ export default function AdminStats() {
     revenue: {
       labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
       datasets: [{
-        label: 'Revenue (MWK)',
-        data: [76500, 151300, 113900, 209100, 265200, 132600, 57800],
+        label: 'Revenue (USD)',
+        data: [45, 89, 67, 123, 156, 78, 34],
         borderColor: '#00D4FF',
         backgroundColor: 'rgba(0, 212, 255, 0.1)',
         fill: true,
@@ -161,12 +161,7 @@ export default function AdminStats() {
         ticks: {
           color: '#B0C4DE',
           callback: function(value) {
-            if (value >= 1000000) {
-              return 'MWK ' + (value / 1000000).toFixed(1) + 'M';
-            } else if (value >= 1000) {
-              return 'MWK ' + (value / 1000).toFixed(0) + 'K';
-            }
-            return 'MWK ' + value;
+            return '$' + value;
           }
         }
       },
@@ -290,7 +285,7 @@ export default function AdminStats() {
           className="bg-[#1A2D4A] p-6 rounded-xl border border-[#2A3D5A]"
         >
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-white">Revenue Trend (MWK)</h3>
+            <h3 className="text-lg font-bold text-white">Revenue Trend (USD)</h3>
             <FaEye className="text-[#B0C4DE]" />
           </div>
           <div className="h-64">

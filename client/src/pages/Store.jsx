@@ -132,7 +132,7 @@ export default function Store() {
               <span className="text-[#00D4FF] font-bold">{formatCurrency(cartTotal)}</span>
             </div>
             <Link
-              to="/checkout"
+              to={user ? "/checkout" : "/login?redirect=checkout"}
               className="px-4 py-2 bg-gradient-to-r from-[#00D4FF] to-[#0066FF] text-white font-semibold rounded-lg hover:scale-105 transition-all"
             >
               Checkout →

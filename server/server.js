@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/database');
+const analyticsRoutes = require('./routes/analytics');
 
 // Load environment variables
 dotenv.config();
@@ -21,6 +22,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Import routes
+
 const inquiryRoutes = require('./routes/inquiries');
 const productRoutes = require('./routes/products');
 const authRoutes = require('./routes/auth');
@@ -29,8 +31,11 @@ const blogRoutes = require('./routes/blog');
 const userRoutes = require('./routes/users');
 const orderRoutes = require('./routes/orders');
 const wishlistRoutes = require('./routes/wishlist');
+const quoteRoutes = require('./routes/quoteRequests');
+const downloadRoutes = require('./routes/downloads');
 
 // Routes
+app.use('/api/analytics', analyticsRoutes);
 app.use('/api/inquiries', inquiryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/auth', authRoutes);
@@ -39,6 +44,8 @@ app.use('/api/blog', blogRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/quote-requests', quoteRoutes);
+app.use('/api/downloads', downloadRoutes);
 
 // Test route
 app.get('/api/test', (req, res) => {
@@ -69,4 +76,6 @@ app.listen(PORT, () => {
   console.log(`👥 Users API: /api/users`);
   console.log(`📦 Orders API: /api/orders`);
   console.log(`❤️ Wishlist API: /api/wishlist`);
+  console.log(`📋 Quote Requests API: /api/quote-requests`);
+  console.log(`📥 Downloads API: /api/downloads`);
 });

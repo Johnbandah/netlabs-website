@@ -2,8 +2,7 @@ const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema({
   userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    type: String,
     default: null
   },
   userEmail: {
@@ -19,7 +18,9 @@ const orderSchema = new mongoose.Schema({
     title: String,
     price: Number,
     quantity: Number,
-    category: String
+    category: String,
+    downloadUrl: String,
+    fileName: String
   }],
   totalAmount: {
     type: Number,
@@ -39,15 +40,9 @@ const orderSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
-  shippingAddress: {
-    address: String,
-    city: String,
-    country: String,
-    phone: String
-  },
-  notes: {
-    type: String,
-    default: ''
+  downloadCount: {
+    type: Number,
+    default: 0
   },
   createdAt: {
     type: Date,

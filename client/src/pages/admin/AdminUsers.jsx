@@ -36,70 +36,7 @@ export default function AdminUsers() {
     regularUsers: 0
   });
 
-  // Sample users for demo
-  const sampleUsers = [
-    { 
-      _id: '1', 
-      name: 'Mercy Banda', 
-      email: 'mercybanda@gmail.com', 
-      role: 'user', 
-      status: 'active',
-      phone: '+265 888 123 456',
-      address: 'Lilongwe, Malawi',
-      createdAt: '2026-08-30T10:00:00Z',
-      lastLogin: '2026-08-31T14:30:00Z',
-      purchases: 12
-    },
-    { 
-      _id: '2', 
-      name: 'John Doe', 
-      email: 'john@test.com', 
-      role: 'user', 
-      status: 'active',
-      phone: '+265 888 789 012',
-      address: 'Blantyre, Malawi',
-      createdAt: '2026-08-28T08:15:00Z',
-      lastLogin: '2026-08-30T09:45:00Z',
-      purchases: 5
-    },
-    { 
-      _id: '3', 
-      name: 'Administrator', 
-      email: 'admin@netlabs.com', 
-      role: 'admin', 
-      status: 'active',
-      phone: '+263 86772 11857',
-      address: 'Victoria Falls, Zimbabwe',
-      createdAt: '2026-08-01T00:00:00Z',
-      lastLogin: '2026-08-31T16:00:00Z',
-      purchases: 0
-    },
-    { 
-      _id: '4', 
-      name: 'Jane Smith', 
-      email: 'jane@test.com', 
-      role: 'user', 
-      status: 'inactive',
-      phone: '+265 999 456 789',
-      address: 'Zomba, Malawi',
-      createdAt: '2026-08-25T11:20:00Z',
-      lastLogin: '2026-08-27T13:10:00Z',
-      purchases: 2
-    },
-    { 
-      _id: '5', 
-      name: 'Mike Johnson', 
-      email: 'mike@test.com', 
-      role: 'user', 
-      status: 'suspended',
-      phone: '+265 888 345 678',
-      address: 'Mzuzu, Malawi',
-      createdAt: '2026-08-20T09:00:00Z',
-      lastLogin: '2026-08-22T11:30:00Z',
-      purchases: 1
-    },
-  ];
-
+  // Fetch users from API
   useEffect(() => {
     fetchUsers();
     fetchStats();
@@ -108,31 +45,88 @@ export default function AdminUsers() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      setTimeout(() => {
-        setUsers(sampleUsers);
-        setLoading(false);
-      }, 500);
+      const response = await fetch(`${API_URL}/api/users`);
+      const data = await response.json();
+      if (data.success) {
+        setUsers(data.data);
+      } else {
+        console.error('Failed to fetch users:', data.message);
+        // Fallback to sample data if API fails
+        setUsers(getSampleUsers());
+      }
     } catch (error) {
       console.error('Error fetching users:', error);
+      setUsers(getSampleUsers());
+    } finally {
       setLoading(false);
     }
   };
 
   const fetchStats = async () => {
     try {
-      setTimeout(() => {
-        setStats({
-          totalUsers: sampleUsers.length,
-          activeUsers: sampleUsers.filter(u => u.status === 'active').length,
-          inactiveUsers: sampleUsers.filter(u => u.status === 'inactive').length,
-          suspendedUsers: sampleUsers.filter(u => u.status === 'suspended').length,
-          adminUsers: sampleUsers.filter(u => u.role === 'admin').length,
-          regularUsers: sampleUsers.filter(u => u.role === 'user').length
-        });
-      }, 300);
+      const response = await fetch(`${API_URL}/api/users/stats/summary`);
+      const data = await response.json();
+      if (data.success) {
+        setStats(data.data);
+      }
     } catch (error) {
       console.error('Error fetching stats:', error);
+      // Calculate stats from users
+      calculateStats(users);
     }
+  };
+
+  const calculateStats = (userList) => {
+    setStats({
+      totalUsers: userList.length,
+      activeUsers: userList.filter(u => u.status === 'active').length,
+      inactiveUsers: userList.filter(u => u.status === 'inactive').length,
+      suspendedUsers: userList.filter(u => u.status === 'suspended').length,
+      adminUsers: userList.filter(u => u.role === 'admin').length,
+      regularUsers: userList.filter(u => u.role === 'user').length
+    });
+  };
+
+  // Sample data as fallback
+  const getSampleUsers = () => {
+    return [
+      { 
+        _id: '1', 
+        name: 'Mercy Banda', 
+        email: 'mercybanda@gmail.com', 
+        role: 'user', 
+        status: 'active',
+        phone: '+265 888 123 456',
+        address: 'Lilongwe, Malawi',
+        createdAt: '2026-08-30T10:00:00Z',
+        lastLogin: '2026-08-31T14:30:00Z',
+        purchases: 12
+      },
+      { 
+        _id: '2', 
+        name: 'John Doe', 
+        email: 'john@test.com', 
+        role: 'user', 
+        status: 'active',
+        phone: '+265 888 789 012',
+        address: 'Blantyre, Malawi',
+        createdAt: '2026-08-28T08:15:00Z',
+        lastLogin: '2026-08-30T09:45:00Z',
+        purchases: 5
+      },
+      { 
+        _id: '3', 
+        name: 'Administrator', 
+        email: 'admin@netlabs.com', 
+        role: 'admin', 
+        status: 'active',
+        phone: '+263 86772 11857',
+        address: 'Victoria Falls, Zimbabwe',
+        createdAt: '2026-08-01T00:00:00Z',
+        lastLogin: '2026-08-31T16:00:00Z',
+        purchases: 0
+      }
+    ];
   };
 
   const showNotification = (message, type = 'success') => {
@@ -140,15 +134,50 @@ export default function AdminUsers() {
     setTimeout(() => setNotification(null), 3000);
   };
 
-  const handleDeleteUser = (id, name) => {
+  const handleDeleteUser = async (id, name) => {
     if (!window.confirm(`Are you sure you want to delete user "${name}"?`)) return;
-    setUsers(users.filter(u => u._id !== id));
-    showNotification(`User "${name}" deleted successfully!`, 'success');
+    try {
+      const response = await fetch(`${API_URL}/api/users/${id}`, {
+        method: 'DELETE'
+      });
+      const data = await response.json();
+      if (data.success) {
+        // Remove user from state
+        const updatedUsers = users.filter(u => u._id !== id);
+        setUsers(updatedUsers);
+        calculateStats(updatedUsers);
+        showNotification(`User "${name}" deleted successfully!`, 'success');
+      } else {
+        showNotification('Failed to delete user', 'error');
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      showNotification('Error deleting user', 'error');
+    }
   };
 
-  const handleUpdateStatus = (id, status) => {
-    setUsers(users.map(u => u._id === id ? { ...u, status } : u));
-    showNotification(`User status updated to ${status}!`, 'success');
+  const handleUpdateStatus = async (id, status) => {
+    try {
+      const response = await fetch(`${API_URL}/api/users/${id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status })
+      });
+      const data = await response.json();
+      if (data.success) {
+        const updatedUsers = users.map(u => u._id === id ? { ...u, status } : u);
+        setUsers(updatedUsers);
+        calculateStats(updatedUsers);
+        showNotification(`User status updated to ${status}!`, 'success');
+      } else {
+        showNotification('Failed to update status', 'error');
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      showNotification('Error updating status', 'error');
+    }
   };
 
   const handleEditUser = (user) => {
@@ -156,11 +185,30 @@ export default function AdminUsers() {
     setShowEditModal(true);
   };
 
-  const handleSaveEdit = (e) => {
+  const handleSaveEdit = async (e) => {
     e.preventDefault();
-    setUsers(users.map(u => u._id === selectedUser._id ? selectedUser : u));
-    setShowEditModal(false);
-    showNotification(`User "${selectedUser.name}" updated successfully!`, 'success');
+    try {
+      const response = await fetch(`${API_URL}/api/users/${selectedUser._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(selectedUser)
+      });
+      const data = await response.json();
+      if (data.success) {
+        const updatedUsers = users.map(u => u._id === selectedUser._id ? selectedUser : u);
+        setUsers(updatedUsers);
+        calculateStats(updatedUsers);
+        setShowEditModal(false);
+        showNotification(`User "${selectedUser.name}" updated successfully!`, 'success');
+      } else {
+        showNotification('Failed to update user', 'error');
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+      showNotification('Error updating user', 'error');
+    }
   };
 
   const filteredUsers = users.filter(user =>

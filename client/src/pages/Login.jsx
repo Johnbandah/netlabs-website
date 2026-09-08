@@ -1,19 +1,18 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   FaEnvelope, 
   FaLock, 
   FaEye, 
   FaEyeSlash, 
-  FaArrowRight, 
-  FaGoogle, 
-  FaGithub 
+  FaArrowRight
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -23,6 +22,9 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+
+  // Get redirect URL from query params
+  const redirect = new URLSearchParams(location.search).get('redirect') || '';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,7 +43,9 @@ export default function Login() {
     if (result.success) {
       setSuccessMessage('Login successful! Redirecting...');
       setTimeout(() => {
-        if (result.user?.role === 'admin') {
+        if (redirect === 'checkout') {
+          navigate('/checkout');
+        } else if (result.user?.role === 'admin') {
           navigate('/admin');
         } else {
           navigate('/dashboard');
@@ -51,43 +55,6 @@ export default function Login() {
       setError(result.message || 'Invalid credentials. Please try again.');
     }
     setLoading(false);
-  };
-
-  // Social login handlers - Get real name from prompt
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    setError('');
-    
-    const name = prompt('Enter your full name:') || 'Google User';
-    
-    const demoUser = {
-      id: 'google_user_' + Date.now(),
-      name: name,
-      email: 'google@netlabs.com',
-      role: 'user',
-      createdAt: new Date().toISOString()
-    };
-    
-    localStorage.setItem('netlabs_user', JSON.stringify(demoUser));
-    window.location.href = '/dashboard';
-  };
-
-  const handleGithubLogin = async () => {
-    setLoading(true);
-    setError('');
-    
-    const name = prompt('Enter your full name:') || 'GitHub User';
-    
-    const demoUser = {
-      id: 'github_user_' + Date.now(),
-      name: name,
-      email: 'github@netlabs.com',
-      role: 'user',
-      createdAt: new Date().toISOString()
-    };
-    
-    localStorage.setItem('netlabs_user', JSON.stringify(demoUser));
-    window.location.href = '/dashboard';
   };
 
   return (
@@ -198,36 +165,6 @@ export default function Login() {
             )}
           </button>
         </form>
-
-        {/* Divider */}
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[#B8D8F0]"></div>
-          </div>
-          <div className="relative flex justify-center text-sm">
-            <span className="px-4 bg-white text-[#4A9BC7]">or continue with</span>
-          </div>
-        </div>
-
-        {/* Social Login */}
-        <div className="grid grid-cols-2 gap-4">
-          <button
-            onClick={handleGoogleLogin}
-            disabled={loading}
-            className="flex items-center justify-center gap-2 p-3 bg-[#E8F4FD] rounded-lg border border-[#B8D8F0] hover:border-[#00B4D8] hover:bg-[#F0F8FF] transition-all disabled:opacity-50"
-          >
-            <FaGoogle className="text-red-500 text-xl" />
-            <span className="text-[#1A3A5C] text-sm font-medium">Google</span>
-          </button>
-          <button
-            onClick={handleGithubLogin}
-            disabled={loading}
-            className="flex items-center justify-center gap-2 p-3 bg-[#E8F4FD] rounded-lg border border-[#B8D8F0] hover:border-[#00B4D8] hover:bg-[#F0F8FF] transition-all disabled:opacity-50"
-          >
-            <FaGithub className="text-[#1A3A5C] text-xl" />
-            <span className="text-[#1A3A5C] text-sm font-medium">GitHub</span>
-          </button>
-        </div>
 
         {/* Register Link */}
         <p className="text-center text-[#4A9BC7] text-sm mt-6">
