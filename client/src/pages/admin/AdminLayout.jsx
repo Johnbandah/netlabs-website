@@ -11,7 +11,9 @@ import {
   FaUsers,
   FaDollarSign,
   FaEdit,
-  FaShoppingBag
+  FaShoppingBag,
+  FaBell,
+  FaTag
 } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import NotificationDropdown from '../../components/NotificationDropdown';
@@ -26,14 +28,16 @@ export default function AdminLayout() {
     { path: '/admin', icon: <FaChartBar />, label: 'Dashboard' },
     { path: '/admin/analytics', icon: <FaChartLine />, label: 'Analytics' },
     { path: '/admin/orders', icon: <FaShoppingBag />, label: 'Orders' },
+    { path: '/admin/coupons', icon: <FaTag />, label: 'Coupons' },
     { path: '/admin/products', icon: <FaBox />, label: 'Products' },
     { path: '/admin/inquiries', icon: <FaEnvelope />, label: 'Inquiries' },
     { path: '/admin/quote-requests', icon: <FaDollarSign />, label: 'Quote Requests' },
+    { path: '/admin/notifications', icon: <FaBell />, label: 'Notifications' },
     { path: '/admin/users', icon: <FaUsers />, label: 'Users' },
     { path: '/admin/blog', icon: <FaEdit />, label: 'Blog' },
   ];
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/');
 
   const handleLogout = () => {
     logout();

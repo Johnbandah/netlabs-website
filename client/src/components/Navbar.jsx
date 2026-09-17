@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Logo from './Logo';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,13 +28,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group shrink-0">
-            <span className="text-2xl font-bold">
-              <span className="text-white group-hover:text-[#00D4FF] transition-colors duration-300">Net</span>
-              <span className="text-[#00D4FF] group-hover:text-white transition-colors duration-300">Labs</span>
-              <span className="text-white group-hover:text-[#00D4FF] transition-colors duration-300">+</span>
-            </span>
-          </Link>
+          <Logo />
 
           {/* Desktop Menu */}
           <div className="hidden lg:flex items-center space-x-6">
@@ -111,7 +106,6 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* ✅ FIXED: Get a Quote button links to /quote-request */}
             <Link
               to="/quote-request"
               className="px-5 py-2 bg-gradient-to-r from-[#00D4FF] to-[#0066FF] text-white font-semibold rounded-lg hover:scale-105 transition-all duration-300 shadow-lg shadow-[#00D4FF]/20 hover:shadow-[#00D4FF]/40 text-sm whitespace-nowrap"
@@ -220,7 +214,6 @@ export default function Navbar() {
               </>
             )}
 
-            {/* ✅ FIXED: Mobile Get a Quote button */}
             <Link
               to="/quote-request"
               className="block mt-3 mx-3 px-4 py-2.5 text-center bg-gradient-to-r from-[#00D4FF] to-[#0066FF] rounded-lg text-white font-semibold hover:scale-105 transition-transform duration-300"

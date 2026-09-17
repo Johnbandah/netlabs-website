@@ -4,6 +4,8 @@ import './index.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { NotificationProvider } from './context/NotificationContext';
+// ===== ADD THIS IMPORT =====
+import { LogProvider } from './context/LogContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import UserLayout from './components/UserLayout';
@@ -32,12 +34,16 @@ import Checkout from './pages/Checkout';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
+import AdminOrders from './pages/admin/AdminOrders';
+import AdminCoupons from './pages/admin/AdminCoupons';
 import AdminProducts from './pages/admin/AdminProducts';
 import AdminInquiries from './pages/admin/AdminInquiries';
 import AdminQuoteRequests from './pages/admin/AdminQuoteRequests';
+import AdminNotifications from './pages/admin/AdminNotifications';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminBlog from './pages/admin/AdminBlog';
-import AdminOrders from './pages/admin/AdminOrders';
+// ===== ADD THIS IMPORT =====
+import SystemLogs from './pages/SystemLogs';
 
 function HomePage() {
   return (
@@ -76,6 +82,21 @@ function AppContent() {
       );
     }
     if (!user || user.role !== 'admin') {
+      return <Navigate to="/login" replace />;
+    }
+    return children;
+  };
+
+  // Protected user route
+  const UserProtectedRoute = ({ children }) => {
+    if (loading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-[#0A1628]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00D4FF]"></div>
+        </div>
+      );
+    }
+    if (!user) {
       return <Navigate to="/login" replace />;
     }
     return children;
@@ -159,25 +180,53 @@ function AppContent() {
           } />
 
           {/* User Routes - With Sidebar (UserLayout) */}
-          <Route path="/dashboard" element={<UserLayout />}>
+          <Route path="/dashboard" element={
+            <UserProtectedRoute>
+              <UserLayout />
+            </UserProtectedRoute>
+          }>
             <Route index element={<UserDashboard />} />
           </Route>
-          <Route path="/my-downloads" element={<UserLayout />}>
+          <Route path="/my-downloads" element={
+            <UserProtectedRoute>
+              <UserLayout />
+            </UserProtectedRoute>
+          }>
             <Route index element={<MyDownloads />} />
           </Route>
-          <Route path="/orders" element={<UserLayout />}>
+          <Route path="/orders" element={
+            <UserProtectedRoute>
+              <UserLayout />
+            </UserProtectedRoute>
+          }>
             <Route index element={<OrderHistory />} />
           </Route>
-          <Route path="/profile" element={<UserLayout />}>
+          <Route path="/profile" element={
+            <UserProtectedRoute>
+              <UserLayout />
+            </UserProtectedRoute>
+          }>
             <Route index element={<UserProfile />} />
           </Route>
-          <Route path="/change-password" element={<UserLayout />}>
+          <Route path="/change-password" element={
+            <UserProtectedRoute>
+              <UserLayout />
+            </UserProtectedRoute>
+          }>
             <Route index element={<ChangePassword />} />
           </Route>
-          <Route path="/wishlist" element={<UserLayout />}>
+          <Route path="/wishlist" element={
+            <UserProtectedRoute>
+              <UserLayout />
+            </UserProtectedRoute>
+          }>
             <Route index element={<Wishlist />} />
           </Route>
-          <Route path="/contact" element={<UserLayout />}>
+          <Route path="/contact" element={
+            <UserProtectedRoute>
+              <UserLayout />
+            </UserProtectedRoute>
+          }>
             <Route index element={<Contact />} />
           </Route>
 
@@ -188,14 +237,29 @@ function AppContent() {
             </AdminProtectedRoute>
           }>
             <Route index element={<AdminDashboard />} />
-            <Route path="orders" element={<AdminOrders />} />
             <Route path="analytics" element={<AdminAnalytics />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="coupons" element={<AdminCoupons />} />
             <Route path="products" element={<AdminProducts />} />
             <Route path="inquiries" element={<AdminInquiries />} />
             <Route path="quote-requests" element={<AdminQuoteRequests />} />
+            <Route path="notifications" element={<AdminNotifications />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="blog" element={<AdminBlog />} />
+            {/* ===== ADD THIS ROUTE ===== */}
+            <Route path="system-logs" element={<SystemLogs />} />
           </Route>
+
+          {/* ===== ADD SYSTEM LOGS ROUTE (Alternative direct access) ===== */}
+          <Route path="/system-logs" element={
+            <AdminProtectedRoute>
+              <>
+                <Navbar />
+                <SystemLogs />
+                <Footer />
+              </>
+            </AdminProtectedRoute>
+          } />
 
           {/* 404 */}
           <Route path="*" element={
@@ -219,10 +283,13 @@ function AppContent() {
 
 function App() {
   return (
+    // ===== WRAP WITH LogProvider =====
     <AuthProvider>
       <CartProvider>
         <NotificationProvider>
-          <AppContent />
+          <LogProvider>
+            <AppContent />
+          </LogProvider>
         </NotificationProvider>
       </CartProvider>
     </AuthProvider>
