@@ -4,7 +4,6 @@ import './index.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { NotificationProvider } from './context/NotificationContext';
-// ===== ADD THIS IMPORT =====
 import { LogProvider } from './context/LogContext';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -37,12 +36,13 @@ import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminCoupons from './pages/admin/AdminCoupons';
 import AdminProducts from './pages/admin/AdminProducts';
+import AdminDownloads from './pages/admin/AdminDownloads';
 import AdminInquiries from './pages/admin/AdminInquiries';
 import AdminQuoteRequests from './pages/admin/AdminQuoteRequests';
 import AdminNotifications from './pages/admin/AdminNotifications';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminBlog from './pages/admin/AdminBlog';
-// ===== ADD THIS IMPORT =====
+import AdminProfile from './pages/admin/AdminProfile';
 import SystemLogs from './pages/SystemLogs';
 
 function HomePage() {
@@ -72,7 +72,6 @@ function AppContent() {
     setLoading(false);
   }, []);
 
-  // Protected admin route
   const AdminProtectedRoute = ({ children }) => {
     if (loading) {
       return (
@@ -87,7 +86,6 @@ function AppContent() {
     return children;
   };
 
-  // Protected user route
   const UserProtectedRoute = ({ children }) => {
     if (loading) {
       return (
@@ -106,127 +104,39 @@ function AppContent() {
     <Router>
       <div className="min-h-screen">
         <Routes>
-          {/* Public Routes - No Sidebar */}
+          {/* Public Routes */}
           <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={
-            <>
-              <Navbar />
-              <Login />
-              <Footer />
-            </>
-          } />
-          <Route path="/register" element={
-            <>
-              <Navbar />
-              <Register />
-              <Footer />
-            </>
-          } />
-          <Route path="/about" element={
-            <>
-              <Navbar />
-              <About />
-              <Footer />
-            </>
-          } />
-          <Route path="/services" element={
-            <>
-              <Navbar />
-              <ServicesPage />
-              <Footer />
-            </>
-          } />
-          <Route path="/projects" element={
-            <>
-              <Navbar />
-              <Projects />
-              <Footer />
-            </>
-          } />
-          <Route path="/store" element={
-            <>
-              <Navbar />
-              <Store />
-              <Footer />
-            </>
-          } />
-          <Route path="/blog" element={
-            <>
-              <Navbar />
-              <Blog />
-              <Footer />
-            </>
-          } />
-          <Route path="/blog/:slug" element={
-            <>
-              <Navbar />
-              <BlogDetail />
-              <Footer />
-            </>
-          } />
-          <Route path="/checkout" element={
-            <>
-              <Navbar />
-              <Checkout />
-              <Footer />
-            </>
-          } />
-          <Route path="/quote-request" element={
-            <>
-              <Navbar />
-              <QuoteRequest />
-              <Footer />
-            </>
-          } />
+          <Route path="/login" element={<><Navbar /><Login /><Footer /></>} />
+          <Route path="/register" element={<><Navbar /><Register /><Footer /></>} />
+          <Route path="/about" element={<><Navbar /><About /><Footer /></>} />
+          <Route path="/services" element={<><Navbar /><ServicesPage /><Footer /></>} />
+          <Route path="/projects" element={<><Navbar /><Projects /><Footer /></>} />
+          <Route path="/store" element={<><Navbar /><Store /><Footer /></>} />
+          <Route path="/blog" element={<><Navbar /><Blog /><Footer /></>} />
+          <Route path="/blog/:slug" element={<><Navbar /><BlogDetail /><Footer /></>} />
+          <Route path="/checkout" element={<><Navbar /><Checkout /><Footer /></>} />
+          <Route path="/quote-request" element={<><Navbar /><QuoteRequest /><Footer /></>} />
 
-          {/* User Routes - With Sidebar (UserLayout) */}
-          <Route path="/dashboard" element={
-            <UserProtectedRoute>
-              <UserLayout />
-            </UserProtectedRoute>
-          }>
+          {/* User Routes */}
+          <Route path="/dashboard" element={<UserProtectedRoute><UserLayout /></UserProtectedRoute>}>
             <Route index element={<UserDashboard />} />
           </Route>
-          <Route path="/my-downloads" element={
-            <UserProtectedRoute>
-              <UserLayout />
-            </UserProtectedRoute>
-          }>
+          <Route path="/my-downloads" element={<UserProtectedRoute><UserLayout /></UserProtectedRoute>}>
             <Route index element={<MyDownloads />} />
           </Route>
-          <Route path="/orders" element={
-            <UserProtectedRoute>
-              <UserLayout />
-            </UserProtectedRoute>
-          }>
+          <Route path="/orders" element={<UserProtectedRoute><UserLayout /></UserProtectedRoute>}>
             <Route index element={<OrderHistory />} />
           </Route>
-          <Route path="/profile" element={
-            <UserProtectedRoute>
-              <UserLayout />
-            </UserProtectedRoute>
-          }>
+          <Route path="/profile" element={<UserProtectedRoute><UserLayout /></UserProtectedRoute>}>
             <Route index element={<UserProfile />} />
           </Route>
-          <Route path="/change-password" element={
-            <UserProtectedRoute>
-              <UserLayout />
-            </UserProtectedRoute>
-          }>
+          <Route path="/change-password" element={<UserProtectedRoute><UserLayout /></UserProtectedRoute>}>
             <Route index element={<ChangePassword />} />
           </Route>
-          <Route path="/wishlist" element={
-            <UserProtectedRoute>
-              <UserLayout />
-            </UserProtectedRoute>
-          }>
+          <Route path="/wishlist" element={<UserProtectedRoute><UserLayout /></UserProtectedRoute>}>
             <Route index element={<Wishlist />} />
           </Route>
-          <Route path="/contact" element={
-            <UserProtectedRoute>
-              <UserLayout />
-            </UserProtectedRoute>
-          }>
+          <Route path="/contact" element={<UserProtectedRoute><UserLayout /></UserProtectedRoute>}>
             <Route index element={<Contact />} />
           </Route>
 
@@ -241,23 +151,20 @@ function AppContent() {
             <Route path="orders" element={<AdminOrders />} />
             <Route path="coupons" element={<AdminCoupons />} />
             <Route path="products" element={<AdminProducts />} />
+            <Route path="downloads" element={<AdminDownloads />} />
             <Route path="inquiries" element={<AdminInquiries />} />
             <Route path="quote-requests" element={<AdminQuoteRequests />} />
             <Route path="notifications" element={<AdminNotifications />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="blog" element={<AdminBlog />} />
-            {/* ===== ADD THIS ROUTE ===== */}
             <Route path="system-logs" element={<SystemLogs />} />
+            <Route path="profile" element={<AdminProfile />} />
           </Route>
 
-          {/* ===== ADD SYSTEM LOGS ROUTE (Alternative direct access) ===== */}
+          {/* System Logs - Direct Access */}
           <Route path="/system-logs" element={
             <AdminProtectedRoute>
-              <>
-                <Navbar />
-                <SystemLogs />
-                <Footer />
-              </>
+              <><Navbar /><SystemLogs /><Footer /></>
             </AdminProtectedRoute>
           } />
 
@@ -283,7 +190,6 @@ function AppContent() {
 
 function App() {
   return (
-    // ===== WRAP WITH LogProvider =====
     <AuthProvider>
       <CartProvider>
         <NotificationProvider>

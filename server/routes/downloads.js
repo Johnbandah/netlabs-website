@@ -1,20 +1,156 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
+const Download = require('../models/Download');
+const { protect, adminOnly } = require('../middleware/auth');
 
-// Get user's purchases (downloads)
+// ============================================
+// MULTER SETUP - File Upload
+// ============================================
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(__dirname, '../uploads');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const safeName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+    cb(null, `${Date.now()}-${safeName}`);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 100 * 1024 * 1024 } // 100MB max
+});
+
+// ============================================
+// ADMIN ROUTES - Upload & Manage
+// ============================================
+
+// Upload new download file (ADMIN)
+router.post('/admin/upload', protect, adminOnly, upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+
+    const download = await Download.create({
+      title: req.body.title,
+      description: req.body.description || '',
+      category: req.body.category || 'General',
+      price: Number(req.body.price) || 0,
+      fileName: req.file.originalname,
+      storedFileName: req.file.filename,
+      filePath: req.file.path,
+      fileSize: req.file.size,
+      fileType: req.file.mimetype,
+      createdBy: req.user._id
+    });
+
+    res.status(201).json({ success: true, data: download });
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Get all downloads (ADMIN)
+router.get('/admin/all', protect, adminOnly, async (req, res) => {
+  try {
+    const downloads = await Download.find().sort({ createdAt: -1 });
+    res.json({ success: true, data: downloads });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Delete a download (ADMIN)
+router.delete('/admin/:id', protect, adminOnly, async (req, res) => {
+  try {
+    const download = await Download.findById(req.params.id);
+    if (!download) {
+      return res.status(404).json({ success: false, message: 'Download not found' });
+    }
+
+    if (fs.existsSync(download.filePath)) {
+      fs.unlinkSync(download.filePath);
+    }
+
+    await download.deleteOne();
+    res.json({ success: true, message: 'Download deleted' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Toggle active status (ADMIN)
+router.put('/admin/:id/toggle', protect, adminOnly, async (req, res) => {
+  try {
+    const download = await Download.findById(req.params.id);
+    if (!download) return res.status(404).json({ success: false });
+
+    download.isActive = !download.isActive;
+    await download.save();
+
+    res.json({ success: true, data: download });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ============================================
+// USER ROUTES - Browse & Download
+// ============================================
+
+// Get all available downloads (USER)
+router.get('/available', async (req, res) => {
+  try {
+    const downloads = await Download.find({ isActive: true }).sort({ createdAt: -1 });
+    res.json({ success: true, data: downloads });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// REAL FILE DOWNLOAD (USER)
+router.get('/file/:id', async (req, res) => {
+  try {
+    const download = await Download.findById(req.params.id);
+    if (!download || !download.isActive) {
+      return res.status(404).json({ success: false, message: 'File not found' });
+    }
+
+    if (!fs.existsSync(download.filePath)) {
+      return res.status(404).json({ success: false, message: 'File missing on server' });
+    }
+
+    download.downloadCount += 1;
+    await download.save();
+
+    res.download(download.filePath, download.fileName);
+  } catch (error) {
+    console.error('Download error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ============================================
+// USER'S PURCHASED DOWNLOADS
+// ============================================
 router.get('/user/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    
-    // Find all orders for this user
-    const orders = await Order.find({ 
+
+    const orders = await Order.find({
       userId: userId,
       status: { $in: ['completed', 'delivered', 'processing', 'paid'] }
     });
-    
-    // Extract all purchased products
+
     const purchases = [];
     orders.forEach(order => {
       order.products.forEach(product => {
@@ -29,155 +165,25 @@ router.get('/user/:userId', async (req, res) => {
         });
       });
     });
-    
-    // If no purchases found, return sample data for demo
+
     if (purchases.length === 0) {
-      const samplePurchases = [
-        {
-          productId: 'sample_1',
-          title: 'Packet Tracer Labs Bundle',
-          category: 'Labs',
-          purchaseDate: new Date().toISOString(),
-          amount: 29.99,
-          downloadUrl: `/api/downloads/file/sample_1`,
-          fileName: 'Packet-Tracer-Labs.zip'
-        },
-        {
-          productId: 'sample_2',
-          title: 'Networking Documentation Suite',
-          category: 'Documentation',
-          purchaseDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-          amount: 19.99,
-          downloadUrl: `/api/downloads/file/sample_2`,
-          fileName: 'Networking-Documentation.zip'
-        }
-      ];
-      return res.json({ success: true, data: samplePurchases });
+      const freeDownloads = await Download.find({ isActive: true, price: 0 });
+      const formatted = freeDownloads.map(d => ({
+        productId: d._id,
+        title: d.title,
+        category: d.category,
+        purchaseDate: d.createdAt,
+        amount: 0,
+        downloadUrl: `/api/downloads/file/${d._id}`,
+        fileName: d.fileName
+      }));
+      return res.json({ success: true, data: formatted });
     }
-    
+
     res.json({ success: true, data: purchases });
   } catch (error) {
     console.error('Error fetching purchases:', error);
-    // Return sample data on error
-    const samplePurchases = [
-      {
-        productId: 'sample_1',
-        title: 'Packet Tracer Labs Bundle',
-        category: 'Labs',
-        purchaseDate: new Date().toISOString(),
-        amount: 29.99,
-        downloadUrl: `/api/downloads/file/sample_1`,
-        fileName: 'Packet-Tracer-Labs.zip'
-      },
-      {
-        productId: 'sample_2',
-        title: 'Networking Documentation Suite',
-        category: 'Documentation',
-        purchaseDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        amount: 19.99,
-        downloadUrl: `/api/downloads/file/sample_2`,
-        fileName: 'Networking-Documentation.zip'
-      }
-    ];
-    res.json({ success: true, data: samplePurchases });
-  }
-});
-
-// Download file
-router.get('/file/:productId', async (req, res) => {
-  try {
-    const { productId } = req.params;
-    const { userId } = req.query;
-
-    console.log(`📥 Download requested: Product ${productId}, User ${userId}`);
-
-    // For demo purposes, create a sample text file
-    // In production, this would serve actual files from storage
-    
-    let fileName = 'download.txt';
-    let fileContent = '';
-    
-    // Create different content based on product
-    if (productId === 'sample_1' || productId === '1') {
-      fileName = 'Packet-Tracer-Labs.zip';
-      fileContent = `
-╔══════════════════════════════════════════════════════════╗
-║                                                          ║
-║              Packet Tracer Labs Bundle                   ║
-║                                                          ║
-║  This is a sample download file for:                    ║
-║  Packet Tracer Labs Bundle                              ║
-║                                                          ║
-║  Contains:                                              ║
-║  ✓ 20+ Packet Tracer lab files                          ║
-║  ✓ Network topology diagrams                            ║
-║  ✓ Configuration guides                                 ║
-║  ✓ Step-by-step instructions                            ║
-║                                                          ║
-║  Downloaded on: ${new Date().toLocaleString()}           ║
-║                                                          ║
-║  Thank you for purchasing from NetLabs+!                ║
-║                                                          ║
-║  In production, this would be your actual .pkt files.   ║
-║                                                          ║
-╚══════════════════════════════════════════════════════════╝
-      `;
-    } else if (productId === 'sample_2' || productId === '2') {
-      fileName = 'Networking-Documentation.zip';
-      fileContent = `
-╔══════════════════════════════════════════════════════════╗
-║                                                          ║
-║           Networking Documentation Suite                ║
-║                                                          ║
-║  This is a sample download file for:                    ║
-║  Networking Documentation Suite                         ║
-║                                                          ║
-║  Contains:                                              ║
-║  ✓ Network Design Templates                             ║
-║  ✓ Audit Checklists                                     ║
-║  ✓ Compliance Guides                                    ║
-║  ✓ Project Documentation Templates                      ║
-║                                                          ║
-║  Downloaded on: ${new Date().toLocaleString()}           ║
-║                                                          ║
-║  Thank you for purchasing from NetLabs+!                ║
-║                                                          ║
-║  In production, this would be your actual files.        ║
-║                                                          ║
-╚══════════════════════════════════════════════════════════╝
-      `;
-    } else {
-      fileName = `${productId}-download.txt`;
-      fileContent = `
-╔══════════════════════════════════════════════════════════╗
-║                                                          ║
-║                    NetLabs+ Download                     ║
-║                                                          ║
-║  Product ID: ${productId}                                ║
-║  Downloaded: ${new Date().toLocaleString()}              ║
-║                                                          ║
-║  Thank you for purchasing from NetLabs+!                ║
-║                                                          ║
-║  In production, this would be your actual file.         ║
-║                                                          ║
-╚══════════════════════════════════════════════════════════╝
-      `;
-    }
-
-    // Set headers for file download
-    res.setHeader('Content-Type', 'application/octet-stream');
-    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-    res.setHeader('Content-Length', fileContent.length);
-    
-    // Send the file content
-    res.send(fileContent);
-    
-  } catch (error) {
-    console.error('Download error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Download failed: ' + error.message 
-    });
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
@@ -185,28 +191,21 @@ router.get('/file/:productId', async (req, res) => {
 router.get('/stats/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    
-    const orders = await Order.find({ userId: userId });
-    const totalDownloads = orders.reduce((sum, order) => sum + (order.downloadCount || 0), 0);
+    const orders = await Order.find({ userId });
     const totalPurchases = orders.reduce((sum, order) => sum + order.products.length, 0);
-    
+
     res.json({
       success: true,
       data: {
-        totalDownloads: totalDownloads || 0,
+        totalDownloads: 0,
         totalPurchases: totalPurchases || 0,
         totalOrders: orders.length || 0
       }
     });
   } catch (error) {
-    console.error('Stats error:', error);
     res.json({
       success: true,
-      data: {
-        totalDownloads: 0,
-        totalPurchases: 0,
-        totalOrders: 0
-      }
+      data: { totalDownloads: 0, totalPurchases: 0, totalOrders: 0 }
     });
   }
 });

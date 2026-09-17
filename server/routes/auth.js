@@ -9,7 +9,6 @@ router.post('/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
     
-    // Check if user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ 
@@ -21,14 +20,12 @@ router.post('/register', async (req, res) => {
     const user = new User({ name, email, password });
     await user.save();
 
-    // Generate JWT
     const token = jwt.sign(
-      { id: user._id, email: user.email },
+      { id: user._id, email: user.email, role: user.role },   // ← ADD role
       process.env.JWT_SECRET || 'secret',
       { expiresIn: '7d' }
     );
 
-    // Send welcome email
     const welcomeTemplate = emailTemplates.welcome({ name, email });
     await sendEmail(email, welcomeTemplate.subject, welcomeTemplate.html);
 
@@ -38,7 +35,8 @@ router.post('/register', async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        role: user.role,                                       // ← ADD role
       },
       message: 'Account created! Welcome email sent.'
     });
@@ -70,7 +68,7 @@ router.post('/login', async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user._id, email: user.email },
+      { id: user._id, email: user.email, role: user.role },   // ← ADD role
       process.env.JWT_SECRET || 'secret',
       { expiresIn: '7d' }
     );
@@ -81,8 +79,10 @@ router.post('/login', async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email
-      }
+        email: user.email,
+        role: user.role,                                       // ← ADD role
+      },
+      redirect: user.role === 'admin' ? '/admin' : '/dashboard'  // ← ADD redirect
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -105,7 +105,15 @@ router.get('/me', async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    res.json({ success: true, user });
+    res.json({ 
+      success: true, 
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
   } catch (error) {
     res.status(401).json({ success: false, message: 'Invalid token' });
   }

@@ -13,7 +13,9 @@ import {
   FaEdit,
   FaShoppingBag,
   FaBell,
-  FaTag
+  FaDownload, 
+  FaTag,
+  FaFileAlt
 } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import NotificationDropdown from '../../components/NotificationDropdown';
@@ -28,6 +30,7 @@ export default function AdminLayout() {
     { path: '/admin', icon: <FaChartBar />, label: 'Dashboard' },
     { path: '/admin/analytics', icon: <FaChartLine />, label: 'Analytics' },
     { path: '/admin/orders', icon: <FaShoppingBag />, label: 'Orders' },
+    { path: '/admin/downloads', icon: <FaDownload />, label: 'Downloads' },
     { path: '/admin/coupons', icon: <FaTag />, label: 'Coupons' },
     { path: '/admin/products', icon: <FaBox />, label: 'Products' },
     { path: '/admin/inquiries', icon: <FaEnvelope />, label: 'Inquiries' },
@@ -35,6 +38,7 @@ export default function AdminLayout() {
     { path: '/admin/notifications', icon: <FaBell />, label: 'Notifications' },
     { path: '/admin/users', icon: <FaUsers />, label: 'Users' },
     { path: '/admin/blog', icon: <FaEdit />, label: 'Blog' },
+    { path: '/admin/system-logs', icon: <FaFileAlt />, label: 'System Logs' },
   ];
 
   const isActive = (path) => location.pathname === path || location.pathname.startsWith(path + '/');
@@ -55,11 +59,11 @@ export default function AdminLayout() {
       </button>
 
       {/* Sidebar */}
-      <div className={`fixed top-0 left-0 h-full w-64 bg-[#1A2D4A] border-r border-[#2A3D5A] transition-transform duration-300 z-40 ${
+      <div className={`fixed top-0 left-0 h-full w-64 bg-[#1A2D4A] border-r border-[#2A3D5A] transition-transform duration-300 z-40 flex flex-col ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } lg:translate-x-0`}>
         {/* Logo */}
-        <div className="p-6 border-b border-[#2A3D5A]">
+        <div className="p-6 border-b border-[#2A3D5A] flex-shrink-0">
           <h2 className="text-2xl font-bold">
             <span className="text-white">Net</span>
             <span className="text-[#00D4FF]">Labs</span>
@@ -68,13 +72,13 @@ export default function AdminLayout() {
           </h2>
         </div>
 
-        {/* Menu */}
-        <nav className="p-4">
+        {/* Menu - Scrollable */}
+        <nav className="flex-1 overflow-y-auto p-4">
           {menuItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all mb-1 ${
                 isActive(item.path)
                   ? 'bg-gradient-to-r from-[#00D4FF] to-[#0066FF] text-white'
                   : 'text-[#B0C4DE] hover:bg-[#2A3D5A] hover:text-white'
@@ -87,20 +91,21 @@ export default function AdminLayout() {
               )}
             </Link>
           ))}
+        </nav>
 
+        {/* Bottom Section - Logout & Version */}
+        <div className="flex-shrink-0 border-t border-[#2A3D5A] p-4">
           {/* Logout Button */}
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all mt-4 border-t border-[#2A3D5A] pt-4"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all mb-3"
           >
             <FaSignOutAlt className="text-xl" />
             <span className="font-medium">Logout</span>
           </button>
-        </nav>
 
-        {/* Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[#2A3D5A]">
-          <p className="text-xs text-[#B0C4DE] text-center">
+          {/* Version Info */}
+          <p className="text-xs text-[#B0C4DE] text-center border-t border-[#2A3D5A] pt-3">
             NetLabs+ Admin v1.0
           </p>
         </div>

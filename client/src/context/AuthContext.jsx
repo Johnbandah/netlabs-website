@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import API_URL from '../api/config';
 
 const AuthContext = createContext(null);
 
@@ -14,116 +15,88 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Check for saved user on mount
+  // Load user on mount (verify token with backend)
   useEffect(() => {
-    const savedUser = localStorage.getItem('netlabs_user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        localStorage.removeItem('netlabs_user');
+    const loadUser = async () => {
+      const token = localStorage.getItem('netlabs_token');
+      const savedUser = localStorage.getItem('netlabs_user');
+
+      if (token && savedUser) {
+        try {
+          const res = await fetch(`${API_URL}/api/auth/me`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await res.json();
+
+          if (data.success) {
+            setUser(data.user);
+            localStorage.setItem('netlabs_user', JSON.stringify(data.user));
+          } else {
+            localStorage.removeItem('netlabs_token');
+            localStorage.removeItem('netlabs_user');
+          }
+        } catch (err) {
+          // Fall back to saved user if backend unreachable
+          try { setUser(JSON.parse(savedUser)); } catch (e) {}
+        }
       }
-    }
-    setLoading(false);
+      setLoading(false);
+    };
+
+    loadUser();
   }, []);
 
-  // Register function
+  // Register
   const register = async (name, email, password) => {
     try {
-      if (!name || !email || !password) {
-        return { success: false, message: 'Please fill in all fields' };
-      }
+      const res = await fetch(`${API_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
+      const data = await res.json();
 
-      if (password.length < 6) {
-        return { success: false, message: 'Password must be at least 6 characters' };
-      }
+      if (!data.success) return { success: false, message: data.message };
 
-      // Check if user already exists
-      const existingUsers = JSON.parse(localStorage.getItem('netlabs_users') || '[]');
-      if (existingUsers.find(u => u.email === email)) {
-        return { success: false, message: 'User with this email already exists' };
-      }
+      localStorage.setItem('netlabs_token', data.token);
+      localStorage.setItem('netlabs_user', JSON.stringify(data.user));
+      setUser(data.user);
 
-      const newUser = {
-        id: 'user_' + Date.now(),
-        name: name,
-        email: email,
-        role: 'user',
-        createdAt: new Date().toISOString()
-      };
-
-      // Save to users list
-      existingUsers.push(newUser);
-      localStorage.setItem('netlabs_users', JSON.stringify(existingUsers));
-
-      // Set as current user
-      localStorage.setItem('netlabs_user', JSON.stringify(newUser));
-      setUser(newUser);
-      
-      return { success: true, user: newUser };
+      return { success: true, user: data.user };
     } catch (error) {
       return { success: false, message: 'Registration failed. Please try again.' };
     }
   };
 
-  // Login function
+  // Login
   const login = async (email, password) => {
     try {
-      if (!email || !password) {
-        return { success: false, message: 'Please enter email and password' };
-      }
+      const res = await fetch(`${API_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
 
-      // Check admin login
-      if (email === 'admin@netlabs.com' && password === 'admin123') {
-        const adminUser = {
-          id: 'admin_001',
-          name: 'Administrator',
-          email: email,
-          role: 'admin',
-          createdAt: new Date().toISOString()
-        };
-        localStorage.setItem('netlabs_user', JSON.stringify(adminUser));
-        setUser(adminUser);
-        return { success: true, user: adminUser, redirect: '/admin' };
-      }
+      if (!data.success) return { success: false, message: data.message };
 
-      // Check if user exists in registered users
-      const existingUsers = JSON.parse(localStorage.getItem('netlabs_users') || '[]');
-      const foundUser = existingUsers.find(u => u.email === email);
-      
-      if (foundUser) {
-        // For demo, any password works for existing users
-        localStorage.setItem('netlabs_user', JSON.stringify(foundUser));
-        setUser(foundUser);
-        return { success: true, user: foundUser, redirect: '/dashboard' };
-      }
+      localStorage.setItem('netlabs_token', data.token);
+      localStorage.setItem('netlabs_user', JSON.stringify(data.user));
+      setUser(data.user);
 
-      // If user doesn't exist, create a new one (for demo)
-      if (email && password) {
-        const newUser = {
-          id: 'user_' + Date.now(),
-          name: email.split('@')[0] || 'User',
-          email: email,
-          role: 'user',
-          createdAt: new Date().toISOString()
-        };
-        // Save to users list
-        const allUsers = JSON.parse(localStorage.getItem('netlabs_users') || '[]');
-        allUsers.push(newUser);
-        localStorage.setItem('netlabs_users', JSON.stringify(allUsers));
-        
-        localStorage.setItem('netlabs_user', JSON.stringify(newUser));
-        setUser(newUser);
-        return { success: true, user: newUser, redirect: '/dashboard' };
-      }
-
-      return { success: false, message: 'Invalid credentials' };
+      return {
+        success: true,
+        user: data.user,
+        redirect: data.redirect || (data.user.role === 'admin' ? '/admin' : '/dashboard')
+      };
     } catch (error) {
       return { success: false, message: 'Login failed. Please try again.' };
     }
   };
 
+  // Logout
   const logout = () => {
+    localStorage.removeItem('netlabs_token');
     localStorage.removeItem('netlabs_user');
     setUser(null);
   };
@@ -138,9 +111,5 @@ export const AuthProvider = ({ children }) => {
     isAdmin: user?.role === 'admin'
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
