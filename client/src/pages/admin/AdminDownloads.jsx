@@ -10,6 +10,7 @@ import {
   FaCheck
 } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
+import { apiFetch } from '../../api/client';
 import API_URL from '../../api/config';
 
 export default function AdminDownloads() {
@@ -33,22 +34,11 @@ export default function AdminDownloads() {
     setTimeout(() => setMessage({ type: '', text: '' }), 4000);
   };
 
-  // Get auth token (adjust based on how your AuthContext stores it)
-  const getToken = () => {
-    return localStorage.getItem('token') || localStorage.getItem('authToken');
-  };
-
   // Fetch all downloads (admin)
   const fetchDownloads = async () => {
     try {
       setLoading(true);
-      const token = getToken();
-      const response = await fetch(`${API_URL}/api/downloads/admin/all`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const data = await response.json();
+      const data = await apiFetch('/api/downloads/admin/all');
       if (data.success) {
         setDownloads(data.data || []);
       } else {
@@ -56,7 +46,7 @@ export default function AdminDownloads() {
       }
     } catch (error) {
       console.error('Error fetching downloads:', error);
-      showMessage('error', 'Failed to load downloads');
+      showMessage('error', error.message || 'Failed to load downloads');
     } finally {
       setLoading(false);
     }
@@ -69,12 +59,18 @@ export default function AdminDownloads() {
   // Upload file
   const handleUpload = async (e) => {
     e.preventDefault();
-    if (!file) return showMessage('error', 'Please select a file');
-    if (!form.title) return showMessage('error', 'Please enter a title');
+
+    if (!file) {
+      showMessage('error', 'Please select a file');
+      return;
+    }
+    if (!form.title) {
+      showMessage('error', 'Please enter a title');
+      return;
+    }
 
     try {
       setUploading(true);
-      const token = getToken();
 
       const formData = new FormData();
       formData.append('title', form.title);
@@ -83,16 +79,10 @@ export default function AdminDownloads() {
       formData.append('price', form.price);
       formData.append('file', file);
 
-      const response = await fetch(`${API_URL}/api/downloads/admin/upload`, {
+      const data = await apiFetch('/api/downloads/admin/upload', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-          // Don't set Content-Type - browser does it for FormData
-        },
         body: formData
       });
-
-      const data = await response.json();
 
       if (data.success) {
         showMessage('success', 'File uploaded successfully!');
@@ -105,7 +95,7 @@ export default function AdminDownloads() {
       }
     } catch (error) {
       console.error('Upload error:', error);
-      showMessage('error', 'Upload failed');
+      showMessage('error', error.message || 'Upload failed');
     } finally {
       setUploading(false);
     }
@@ -116,14 +106,9 @@ export default function AdminDownloads() {
     if (!window.confirm(`Delete "${title}"? This cannot be undone.`)) return;
 
     try {
-      const token = getToken();
-      const response = await fetch(`${API_URL}/api/downloads/admin/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const data = await apiFetch(`/api/downloads/admin/${id}`, {
+        method: 'DELETE'
       });
-      const data = await response.json();
       if (data.success) {
         showMessage('success', 'File deleted');
         fetchDownloads();
@@ -131,26 +116,21 @@ export default function AdminDownloads() {
         showMessage('error', data.message || 'Delete failed');
       }
     } catch (error) {
-      showMessage('error', 'Failed to delete file');
+      showMessage('error', error.message || 'Failed to delete file');
     }
   };
 
   // Toggle active status
   const handleToggle = async (id) => {
     try {
-      const token = getToken();
-      const response = await fetch(`${API_URL}/api/downloads/admin/${id}/toggle`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const data = await apiFetch(`/api/downloads/admin/${id}/toggle`, {
+        method: 'PUT'
       });
-      const data = await response.json();
       if (data.success) {
         fetchDownloads();
       }
     } catch (error) {
-      showMessage('error', 'Failed to update status');
+      showMessage('error', error.message || 'Failed to update status');
     }
   };
 
