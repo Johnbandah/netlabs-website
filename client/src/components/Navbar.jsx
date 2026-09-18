@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Logo from './Logo';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { user, logout } = useAuth();
+  const location = useLocation();
+
+  // Hide navbar on admin routes
+  if (location.pathname.startsWith('/admin')) {
+    return null;
+  }
 
   const mainNavLinks = [
     { href: '/', label: 'Home' },
@@ -22,6 +28,8 @@ export default function Navbar() {
   ];
 
   const isAdmin = user?.role === 'admin';
+  const profilePath = isAdmin ? '/admin/profile' : '/profile';
+  const profileLabel = isAdmin ? 'Admin' : user?.name;
 
   return (
     <nav className="fixed top-0 w-full bg-[#0A1628]/95 backdrop-blur-md z-50 border-b border-[#1A2D4A]">
@@ -57,16 +65,6 @@ export default function Navbar() {
                 ))}
               </>
             )}
-
-            {isAdmin && (
-              <Link
-                to="/admin"
-                className="relative text-[#00D4FF] hover:text-[#00D4FF]/80 transition-colors duration-300 group py-1 text-sm font-medium"
-              >
-                Admin
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[#00D4FF] transition-all duration-300 group-hover:w-full"></span>
-              </Link>
-            )}
           </div>
 
           {/* Right Side - Auth & CTA */}
@@ -74,10 +72,14 @@ export default function Navbar() {
             {user ? (
               <div className="flex items-center space-x-4">
                 <Link
-                  to="/profile"
-                  className="text-[#00D4FF] text-sm font-medium hover:text-[#00D4FF]/80 transition-colors"
+                  to={profilePath}
+                  className={`text-sm font-medium transition-colors ${
+                    isAdmin
+                      ? 'px-3 py-1.5 bg-[#00D4FF]/20 text-[#00D4FF] rounded-lg border border-[#00D4FF]/30 hover:bg-[#00D4FF]/30'
+                      : 'text-[#00D4FF] hover:text-[#00D4FF]/80'
+                  }`}
                 >
-                  {user.name}
+                  {profileLabel}
                 </Link>
                 <button
                   onClick={() => {
@@ -156,26 +158,16 @@ export default function Navbar() {
               </>
             )}
 
-            {isAdmin && (
-              <Link
-                to="/admin"
-                className="block py-2.5 text-[#00D4FF] hover:text-[#00D4FF]/80 transition-colors duration-300 pl-3 border-l-2 border-transparent hover:border-[#00D4FF] text-sm font-medium"
-                onClick={() => setIsOpen(false)}
-              >
-                Admin
-              </Link>
-            )}
-
             <div className="border-t border-[#2A3D5A] my-2"></div>
 
             {user ? (
               <>
                 <Link
-                  to="/profile"
+                  to={profilePath}
                   className="block py-2.5 text-[#00D4FF] text-sm font-medium pl-3"
                   onClick={() => setIsOpen(false)}
                 >
-                  {user.name}
+                  {profileLabel}
                 </Link>
                 <Link
                   to="/change-password"
